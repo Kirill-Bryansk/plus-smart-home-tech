@@ -10,16 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.collector.dto.hub.HubEventDto;
 import ru.yandex.practicum.collector.dto.sensor.SensorEventDto;
-import ru.yandex.practicum.collector.enums.HubEventType;
-import ru.yandex.practicum.collector.enums.SensorEventType;
 import ru.yandex.practicum.collector.mapper.hub.HubEventHandler;
 import ru.yandex.practicum.collector.mapper.sensor.SensorEventHandler;
 
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Validated

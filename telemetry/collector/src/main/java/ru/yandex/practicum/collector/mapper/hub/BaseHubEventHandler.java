@@ -17,6 +17,7 @@ public abstract class BaseHubEventHandler<T extends SpecificRecordBase> implemen
     }
 
     protected abstract HubEventType getSupportedType();
+
     protected abstract T mapToAvro(HubEventDto event);
 
     @Override

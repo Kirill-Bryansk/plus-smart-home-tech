@@ -9,7 +9,7 @@ import ru.yandex.practicum.collector.enums.SensorEventType;
 @Getter
 @Setter
 @ToString(callSuper = true)
-public class LightSensorEventDto extends SensorEventDto{
+public class LightSensorEventDto extends SensorEventDto {
     @NotNull
     private int linkQuality;
 
