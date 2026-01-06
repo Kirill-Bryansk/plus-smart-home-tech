@@ -9,8 +9,7 @@ public enum HubEventType {
     DEVICE_ADDED("DEVICE_ADDED"),
     DEVICE_REMOVED("DEVICE_REMOVED"),
     SCENARIO_ADDED("SCENARIO_ADDED"),
-    SCENARIO_REMOVED("SCENARIO_REMOVED"),
-    UNKNOWN("UNKNOWN"); // для неизвестных типов
+    SCENARIO_REMOVED("SCENARIO_REMOVED");
 
     private final String value;
 
@@ -31,6 +30,6 @@ public enum HubEventType {
             }
         }
         log.warn("Неизвестный hub event type: {}", value);
-        return UNKNOWN; // вместо исключения
+        throw new IllegalArgumentException("Unknown hub event type: " + value);
     }
 }

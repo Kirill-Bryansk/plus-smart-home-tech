@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import ru.yandex.practicum.collector.dto.hub.device.DeviceAddedEventDto;
 import ru.yandex.practicum.collector.dto.hub.device.DeviceRemovedEventDto;
 import ru.yandex.practicum.collector.dto.hub.scenario.ScenarioAddedEventDto;
@@ -27,6 +28,7 @@ import java.time.Instant;
 })
 @Getter
 @Setter
+@ToString
 public abstract class HubEventDto {
     @NotBlank
     private String hubId;

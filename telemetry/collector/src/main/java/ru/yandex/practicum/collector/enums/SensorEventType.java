@@ -10,8 +10,7 @@ public enum SensorEventType {
     TEMPERATURE_SENSOR_EVENT("TEMPERATURE_SENSOR_EVENT"),
     LIGHT_SENSOR_EVENT("LIGHT_SENSOR_EVENT"),
     CLIMATE_SENSOR_EVENT("CLIMATE_SENSOR_EVENT"),
-    SWITCH_SENSOR_EVENT("SWITCH_SENSOR_EVENT"),
-    UNKNOWN("UNKNOWN"); // для неизвестных типов
+    SWITCH_SENSOR_EVENT("SWITCH_SENSOR_EVENT");
 
     private final String value;
 
@@ -32,6 +31,6 @@ public enum SensorEventType {
             }
         }
         log.warn("Неизвестный sensor event type: {}", value);
-        return UNKNOWN; // вместо исключения
+        throw new IllegalArgumentException("Unknown sensor event type: " + value);
     }
 }

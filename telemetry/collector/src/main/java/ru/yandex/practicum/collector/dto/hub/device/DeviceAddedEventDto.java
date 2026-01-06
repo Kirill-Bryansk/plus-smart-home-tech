@@ -1,5 +1,6 @@
 package ru.yandex.practicum.collector.dto.hub.device;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ import ru.yandex.practicum.collector.enums.HubEventType;
 @ToString(callSuper = true)
 public class DeviceAddedEventDto extends HubEventDto {
 
-    @NotNull
+    @NotBlank
     private String id;
 
     @NotNull
