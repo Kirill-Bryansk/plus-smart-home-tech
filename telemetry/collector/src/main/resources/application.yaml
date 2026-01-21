@@ -9,6 +9,10 @@ logging:
       springframework: ERROR
       apache.kafka: WARN
 
+grpc:
+  server:
+    port: 9090
+
 collector:
   kafka:
     producer:

@@ -97,6 +97,15 @@
             <version>1.63.0</version>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- Для задания в теории -->
+
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-server-spring-boot-starter</artifactId>
+            <version>3.1.0.RELEASE</version>
+        </dependency>
+
     </dependencies>
 
 
