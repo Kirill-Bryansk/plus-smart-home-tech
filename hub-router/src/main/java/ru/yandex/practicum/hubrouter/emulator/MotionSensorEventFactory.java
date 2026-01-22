@@ -4,12 +4,10 @@ import lombok.RequiredArgsConstructor;
 import ru.yandex.practicum.grpc.telemetry.event.MotionSensorProto;
 import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.hubrouter.config.MotionSensorConfig;
-
 import java.util.concurrent.ThreadLocalRandom;
 
 @RequiredArgsConstructor
 public class MotionSensorEventFactory extends BaseSensorEventFactory {
-
     private final MotionSensorConfig sensorConfig;
 
     @Override

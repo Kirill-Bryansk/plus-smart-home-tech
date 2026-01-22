@@ -7,7 +7,6 @@ import ru.yandex.practicum.hubrouter.config.TemperatureSensorConfig;
 
 @RequiredArgsConstructor
 public class TemperatureSensorEventFactory extends BaseSensorEventFactory {
-
     private final TemperatureSensorConfig sensorConfig;
 
     @Override
@@ -16,7 +15,7 @@ public class TemperatureSensorEventFactory extends BaseSensorEventFactory {
                 sensorConfig.getTemperature().getMinValue(),
                 sensorConfig.getTemperature().getMaxValue()
         );
-        int temperatureFahrenheit = (int) (temperatureCelsius * 1.8 + 32);
+        int temperatureFahrenheit = (int) (temperatureCelsius * 1.8 + 32);  // ВЫЧИСЛЯЕМ
 
         return SensorEventProto.newBuilder()
                 .setId(sensorConfig.getId())
