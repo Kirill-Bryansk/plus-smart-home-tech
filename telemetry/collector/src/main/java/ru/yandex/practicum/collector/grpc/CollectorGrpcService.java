@@ -7,6 +7,7 @@ import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
+import ru.yandex.practicum.collector.grpc.hub.processor.GrpcHubProcessor;
 import ru.yandex.practicum.collector.grpc.sensor.processor.GrpcSensorProcessor;
 import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
 import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
@@ -24,11 +25,12 @@ import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 public class CollectorGrpcService extends CollectorControllerGrpc.CollectorControllerImplBase {
 
     private final GrpcSensorProcessor sensorProcessor;
+    private final GrpcHubProcessor hubProcessor;
 
     @Override
-    public void sendSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
+    public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
         log.info("╔═══════════════════════════════════════════════════════════════╗");
-        log.info("║ gRPC ВХОДЯЩИЙ ЗАПРОС: sendSensorEvent                         ║");
+        log.info("║ gRPC ВХОДЯЩИЙ ЗАПРОС: CollectSensorEvent                      ║");
         log.info("║ ID: {}, Hub: {}, Тип: {}                           ║",
                 request.getId(),
                 request.getHubId(),
@@ -65,25 +67,30 @@ public class CollectorGrpcService extends CollectorControllerGrpc.CollectorContr
     }
 
     @Override
-    public void sendHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver) {
+    public void collectHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver) {
         log.info("╔═══════════════════════════════════════════════════════════════╗");
-        log.info("║ gRPC ВХОДЯЩИЙ ЗАПРОС: sendHubEvent                            ║");
-        log.info("║ Hub ID: {}                                           ║", request.getHubId());
+        log.info("║ gRPC ВХОДЯЩИЙ ЗАПРОС: CollectHubEvent                         ║");
+        log.info("║ Hub ID: {}, Тип: {}                                ║",
+                request.getHubId(), request.getPayloadCase());
         log.info("╚═══════════════════════════════════════════════════════════════╝");
 
         try {
-            // TODO: Реализовать обработку событий хаба
-            log.warn("Обработка событий хаба пока не реализована");
+            // Делегируем обработку процессору
+            hubProcessor.processHubEvent(request);
 
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
 
-            log.info("✓ Событие хаба {} принято (обработка в разработке)", request.getHubId());
-
-        } catch (Exception e) {
-            log.error("Ошибка обработки события хаба", e);
+            log.info("✓ Hub-событие {} успешно обработано", request.getPayloadCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("КЛИЕНТСКАЯ ОШИБКА: {}", e.getMessage());
             responseObserver.onError(new StatusRuntimeException(
-                    Status.INTERNAL.withDescription(e.getMessage())
+                    Status.INVALID_ARGUMENT.withDescription(e.getMessage())
+            ));
+        } catch (Exception e) {
+            log.error("СЕРВЕРНАЯ ОШИБКА обработки Hub-события: {}", e.getMessage(), e);
+            responseObserver.onError(new StatusRuntimeException(
+                    Status.INTERNAL.withDescription("Внутренняя ошибка сервера")
             ));
         } finally {
             log.info("─────────────────────────────────────────────────────────────");

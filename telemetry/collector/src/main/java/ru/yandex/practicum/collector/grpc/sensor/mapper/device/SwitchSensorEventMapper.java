@@ -21,7 +21,7 @@ public class SwitchSensorEventMapper extends BaseSensorEventMapper<SwitchSensorE
 // Можно удалить эту проверку после подтверждения корректности работы typeMapper.
     @Override
     protected void validateProto(SensorEventProto proto) {
-        if (!proto.hasSwitchSensor()) {
+        if (!proto.hasSwitchSensorEvent()) {
             log.error("ОШИБКА: В прото отсутствуют данные датчика-переключателя");
             throw new IllegalArgumentException("Отсутствуют данные датчика-переключателя");
         }
@@ -29,7 +29,7 @@ public class SwitchSensorEventMapper extends BaseSensorEventMapper<SwitchSensorE
 
     @Override
     protected void fillSpecificFields(SwitchSensorEventDto dto, SensorEventProto proto) {
-        SwitchSensorProto switchData = proto.getSwitchSensor();
+        SwitchSensorProto switchData = proto.getSwitchSensorEvent();
 
         log.debug("Данные датчика-переключателя: state={}", switchData.getState());
 

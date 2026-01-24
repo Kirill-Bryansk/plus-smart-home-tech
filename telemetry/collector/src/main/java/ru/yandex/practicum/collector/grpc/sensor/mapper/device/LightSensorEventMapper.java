@@ -21,7 +21,7 @@ public class LightSensorEventMapper extends BaseSensorEventMapper<LightSensorEve
 // Можно удалить эту проверку после подтверждения корректности работы typeMapper.
     @Override
     protected void validateProto(SensorEventProto proto) {
-        if (!proto.hasLightSensor()) {
+        if (!proto.hasLightSensorEvent()) {
             log.error("ОШИБКА: В прото отсутствуют данные светового датчика");
             throw new IllegalArgumentException("Отсутствуют данные светового датчика");
         }
@@ -29,7 +29,7 @@ public class LightSensorEventMapper extends BaseSensorEventMapper<LightSensorEve
 
     @Override
     protected void fillSpecificFields(LightSensorEventDto dto, SensorEventProto proto) {
-        LightSensorProto lightData = proto.getLightSensor();
+        LightSensorProto lightData = proto.getLightSensorEvent();
 
         log.debug("Данные светового датчика: linkQuality={}, luminosity={}",
                 lightData.getLinkQuality(), lightData.getLuminosity());

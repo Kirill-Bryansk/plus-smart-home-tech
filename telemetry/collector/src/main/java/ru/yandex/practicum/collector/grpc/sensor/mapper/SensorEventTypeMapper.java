@@ -23,19 +23,19 @@ public class SensorEventTypeMapper {
         SensorEventType result;
 
         switch (payloadCase) {
-            case MOTION_SENSOR:
+            case MOTION_SENSOR_EVENT:
                 result = SensorEventType.MOTION_SENSOR_EVENT;
                 break;
-            case TEMPERATURE_SENSOR:
+            case TEMPERATURE_SENSOR_EVENT:
                 result = SensorEventType.TEMPERATURE_SENSOR_EVENT;
                 break;
-            case LIGHT_SENSOR:
+            case LIGHT_SENSOR_EVENT:
                 result = SensorEventType.LIGHT_SENSOR_EVENT;
                 break;
-            case CLIMATE_SENSOR:
+            case CLIMATE_SENSOR_EVENT:
                 result = SensorEventType.CLIMATE_SENSOR_EVENT;
                 break;
-            case SWITCH_SENSOR:
+            case SWITCH_SENSOR_EVENT:
                 result = SensorEventType.SWITCH_SENSOR_EVENT;
                 break;
             case PAYLOAD_NOT_SET:

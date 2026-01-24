@@ -21,7 +21,7 @@ public class MotionSensorEventMapper extends BaseSensorEventMapper<MotionSensorE
 // Можно удалить эту проверку после подтверждения корректности работы typeMapper.
     @Override
     protected void validateProto(SensorEventProto proto) {
-        if (!proto.hasMotionSensor()) {
+        if (!proto.hasMotionSensorEvent()) {
             log.error("ОШИБКА: В прото отсутствуют данные датчика движения");
             throw new IllegalArgumentException("Отсутствуют данные датчика движения");
         }
@@ -29,7 +29,7 @@ public class MotionSensorEventMapper extends BaseSensorEventMapper<MotionSensorE
 
     @Override
     protected void fillSpecificFields(MotionSensorEventDto dto, SensorEventProto proto) {
-        MotionSensorProto motionData = proto.getMotionSensor();
+        MotionSensorProto motionData = proto.getMotionSensorEvent();
 
         log.debug("Данные датчика движения: linkQuality={}, motion={}, voltage={}V",
                 motionData.getLinkQuality(), motionData.getMotion(), motionData.getVoltage());

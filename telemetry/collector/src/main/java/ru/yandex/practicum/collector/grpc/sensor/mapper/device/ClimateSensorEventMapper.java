@@ -21,7 +21,7 @@ public class ClimateSensorEventMapper extends BaseSensorEventMapper<ClimateSenso
 // Можно удалить эту проверку после подтверждения корректности работы typeMapper.
     @Override
     protected void validateProto(SensorEventProto proto) {
-        if (!proto.hasClimateSensor()) {
+        if (!proto.hasClimateSensorEvent()) {
             log.error("ОШИБКА: В прото отсутствуют данные климатического датчика");
             throw new IllegalArgumentException("Отсутствуют данные климатического датчика");
         }
@@ -29,7 +29,7 @@ public class ClimateSensorEventMapper extends BaseSensorEventMapper<ClimateSenso
 
     @Override
     protected void fillSpecificFields(ClimateSensorEventDto dto, SensorEventProto proto) {
-        ClimateSensorProto climateData = proto.getClimateSensor();
+        ClimateSensorProto climateData = proto.getClimateSensorEvent();
 
         log.debug("Данные климатического датчика: temp={}°C, humidity={}%, CO2={}ppm",
                 climateData.getTemperatureC(), climateData.getHumidity(), climateData.getCo2Level());

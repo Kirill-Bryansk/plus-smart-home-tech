@@ -21,7 +21,7 @@ public class TemperatureSensorEventMapper extends BaseSensorEventMapper<Temperat
     // Можно удалить эту проверку после подтверждения корректности работы typeMapper.
     @Override
     protected void validateProto(SensorEventProto proto) {
-        if (!proto.hasTemperatureSensor()) {
+        if (!proto.hasTemperatureSensorEvent()) {
             log.error("ОШИБКА: В прото отсутствуют данные температурного датчика");
             throw new IllegalArgumentException("Отсутствуют данные температурного датчика");
         }
@@ -29,7 +29,7 @@ public class TemperatureSensorEventMapper extends BaseSensorEventMapper<Temperat
 
     @Override
     protected void fillSpecificFields(TemperatureSensorEventDto dto, SensorEventProto proto) {
-        TemperatureSensorProto tempData = proto.getTemperatureSensor();
+        TemperatureSensorProto tempData = proto.getTemperatureSensorEvent();
 
         log.debug("Данные температурного датчика: tempC={}°C, tempF={}°F",
                 tempData.getTemperatureC(), tempData.getTemperatureF());
