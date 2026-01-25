@@ -21,6 +21,7 @@
         <module>commerce</module>
         <module>grpc-echo-client</module>
         <module>grpc-echo-server</module>
+        <module>telemetry/aggregator</module>
     </modules>
 
     <properties>

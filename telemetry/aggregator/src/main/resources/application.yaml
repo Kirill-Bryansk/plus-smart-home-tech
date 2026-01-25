@@ -1,0 +1,26 @@
+# Конфигурация приложения Aggregator
+
+logging:
+  level:
+    ru.yandex.practicum.aggregator: DEBUG
+    org.apache.kafka: WARN
+    org.springframework: INFO
+
+aggregator:
+  kafka:
+    # Настройки для Consumer
+    consumer:
+      bootstrap.servers: "localhost:9092"
+      group.id: "telemetry-aggregator-group"
+      key.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+      value.deserializer: "ru.yandex.practicum.aggregator.deserializer.SensorEventDeserializer"
+      enable.auto.commit: "false"
+      auto.offset.reset: "earliest"
+
+    # Настройки для Producer
+    producer:
+      bootstrap.servers: "localhost:9092"
+      key.serializer: "org.apache.kafka.common.serialization.StringSerializer"
+      value.serializer: "ru.yandex.practicum.aggregator.serializer.GeneralAvroSerializer"
+      acks: "all"
+      retries: "3"
