@@ -8,6 +8,11 @@ spring:
     password: shareit
     driver-class-name: org.postgresql.Driver
 
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -25,15 +30,35 @@ analyzer:
     consumer:
       hubs:
         group-id: analyzer-hub-events
-        topic: telemetry.hubs.v1
       snapshots:
         group-id: analyzer-snapshot-events
-        topic: telemetry.snapshots.v1
+      max-poll-records: 500
+      session-timeout-ms: 10000
+      heartbeat-interval-ms: 3000
+      max-poll-interval-ms: 300000
+    processor:
+      poll-timeout: 1000
+      auto-commit: false
+      auto-offset-reset: earliest
+      max-poll-records: 500
+      session-timeout-ms: 10000
+      heartbeat-interval-ms: 3000
+      max-poll-interval-ms: 300000
+      allow-auto-create-topics: false
 
 grpc:
   client:
     hub-router:
-      address: static://localhost:59090
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: plaintext
+      address: 'static://localhost:59090'
+      enable-keep-alive: true
+      keep-alive-without-calls: true
+      negotiation-type: plaintext
+
+logging:
+  level:
+    ru.yandex.practicum.telemetry.analyzer: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

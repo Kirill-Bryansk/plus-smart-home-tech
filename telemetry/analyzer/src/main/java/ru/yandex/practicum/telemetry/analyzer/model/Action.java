@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.yandex.practicum.telemetry.analyzer.model.enums.ActionType;
 
 @Entity
 @Table(name = "actions")
@@ -13,6 +14,10 @@ public class Action {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private ActionType type;
+
+    @Column(name = "value")
     private Integer value;
 }

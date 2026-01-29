@@ -1,4 +1,4 @@
-package ru.yandex.practicum.telemetry.analyzer.model;
+package ru.yandex.practicum.telemetry.analyzer.model.enums;
 
 public enum ConditionType {
     MOTION,        // для датчиков движения

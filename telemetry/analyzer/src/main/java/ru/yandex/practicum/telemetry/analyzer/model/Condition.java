@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.yandex.practicum.telemetry.analyzer.model.enums.ConditionOperation;
+import ru.yandex.practicum.telemetry.analyzer.model.enums.ConditionType;
 
 @Entity
 @Table(name = "conditions")
@@ -13,7 +15,14 @@ public class Condition {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String type;
-    private String operation;
-    private Integer value;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private ConditionType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operation")
+    private ConditionOperation operation;
+
+    @Column(name = "value")
+    private Integer value; // Только Integer по ТЗ
 }
