@@ -21,8 +21,6 @@
         <module>commerce</module>
         <module>grpc-echo-client</module>
         <module>grpc-echo-server</module>
-        <module>telemetry/aggregator</module>
-        <module>telemetry/analyzer</module>
     </modules>
 
     <properties>
@@ -71,6 +69,12 @@
             <dependency>
                 <groupId>net.devh</groupId>
                 <artifactId>grpc-server-spring-boot-starter</artifactId>
+                <version>${grpc-spring-boot-starter.version}</version>
+            </dependency>
+            <!--    Отдельно для клиента        -->
+            <dependency>
+                <groupId>net.devh</groupId>
+                <artifactId>grpc-client-spring-boot-starter</artifactId>
                 <version>${grpc-spring-boot-starter.version}</version>
             </dependency>
 
