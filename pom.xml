@@ -22,6 +22,7 @@
         <module>grpc-echo-client</module>
         <module>grpc-echo-server</module>
         <module>telemetry/aggregator</module>
+        <module>telemetry/analyzer</module>
     </modules>
 
     <properties>
