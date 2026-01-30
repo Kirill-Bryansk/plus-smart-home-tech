@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: hub-router
+
+hub:
+  id: "smart-home-hub-1"
+
+grpc:
+  client:
+    collector:
+      address: 'static://localhost:59091'
+      negotiation-type: plaintext
+
+  collector:
+    host: localhost
+    port: 59091
+
+sensor:
+  motionSensors:  # ← Изменил: motion-sensors → motionSensors (camelCase)
+    - id: "motion_kitchen"
+      linkQuality:  # ← link-quality → linkQuality
+        minValue: 50
+        maxValue: 100
+      voltage:
+        minValue: 2800
+        maxValue: 3200
+    - id: "motion_living_room"
+      linkQuality:
+        minValue: 60
+        maxValue: 95
+      voltage:
+        minValue: 2900
+        maxValue: 3100
+
+  switchSensors:  # ← switch-sensors → switchSensors
+    - id: "switch_bedroom_light"
+    - id: "switch_kitchen_light"
+    - id: "switch_outlet_hall"
+
+  temperatureSensors:  # ← temperature-sensors → temperatureSensors
+    - id: "temp_bedroom"
+      temperature:
+        minValue: 18
+        maxValue: 24
+    - id: "temp_living_room"
+      temperature:
+        minValue: 20
+        maxValue: 26
+
+  lightSensors:  # ← light-sensors → lightSensors
+    - id: "light_bedroom"
+      luminosity:
+        minValue: 10
+        maxValue: 1000
+      linkQuality:  # ← ДОБАВИТЬ для LightSensor (дефолтные значения)
+        minValue: 50
+        maxValue: 100
+    - id: "light_kitchen"
+      luminosity:
+        minValue: 50
+        maxValue: 1200
+      linkQuality:  # ← ДОБАВИТЬ
+        minValue: 60
+        maxValue: 95
+
+  climateSensors:  # ← climate-sensors → climateSensors
+    - id: "climate_bedroom"
+      temperature:
+        minValue: 18
+        maxValue: 24
+      humidity:
+        minValue: 40
+        maxValue: 60
+      co2Level:  # ← co2-level → co2Level
+        minValue: 400
+        maxValue: 1200
+
+logging:
+  level:
+    ru.yandex.practicum.hubrouter: INFO
+    ru.yandex.practicum.hubrouter.emulator: DEBUG
