@@ -11,3 +11,8 @@ spring:
       retry:
         useRandomPolicy: true
         max-interval: 6000
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    ru.yandex.practicum: DEBUG
