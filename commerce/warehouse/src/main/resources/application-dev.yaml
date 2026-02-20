@@ -1,0 +1,68 @@
+# ============================================
+# ПРОФИЛЬ РАЗРАБОТЧИКА (dev)
+# Для локальной разработки с H2
+# Активация: -Dspring.profiles.active=dev
+# ============================================
+
+# Отключаем импорт Config Server для локальной разработки
+spring:
+  config:
+    import: ""
+
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+  discovery:
+    enabled: false
+
+  # JPA настройки для H2
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # H2 datasource
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:warehouse_dev;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+
+  # H2 console для отладки
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+  # Инициализация схемы
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-h2.sql
+
+# Отключаем Eureka для локальной разработки
+eureka:
+  client:
+    enabled: false
+  discovery:
+    enabled: false
+
+# Детальное логирование для разработки
+logging:
+  level:
+    ru.yandex.practicum.warehouse: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.datasource.init: DEBUG
