@@ -2,9 +2,7 @@ package ru.yandex.practicum.shoppingstore.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import ru.yandex.practicum.model.enums.ProductCategory;
 import ru.yandex.practicum.model.enums.ProductState;
-import ru.yandex.practicum.model.enums.QuantityState;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,7 +11,7 @@ import java.util.UUID;
  * Товар интернет-магазина.
  */
 @Entity
-@Table(name = "product")
+@Table(name = "product", schema = "shopping_store_schema")
 @Data
 public class Product {
 
@@ -33,8 +31,9 @@ public class Product {
     @Column(name = "quantity_state", nullable = false, length = 20)
     private String quantityState;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "product_state", nullable = false, length = 20)
-    private String productState;
+    private ProductState productState;
 
     @Column(name = "product_category", nullable = false, length = 20)
     private String productCategory;
@@ -54,6 +53,9 @@ public class Product {
         updatedAt = Instant.now();
         if (productId == null) {
             productId = UUID.randomUUID();
+        }
+        if (productState == null) {
+            productState = ProductState.ACTIVE;
         }
     }
 
