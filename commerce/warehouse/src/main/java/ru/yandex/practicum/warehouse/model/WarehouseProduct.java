@@ -9,7 +9,7 @@ import java.util.UUID;
  * Товар на складе.
  */
 @Entity
-@Table(name = "warehouse_product")
+@Table(name = "warehouse_product", schema = "warehouse_schema")
 @Data
 public class WarehouseProduct {
 
