@@ -22,9 +22,8 @@ public class ShoppingCart {
     @Column(name = "username", nullable = false, unique = true, length = 32)
     private String username;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "cart_state", length = 10)
-    private CartState cartState;
+    @Column(name = "cart_state", length = 20)
+    private String cartState;
 
     @OneToMany(mappedBy = "shoppingCart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartProduct> products = new ArrayList<>();
@@ -35,7 +34,7 @@ public class ShoppingCart {
             shoppingCartId = UUID.randomUUID();
         }
         if (cartState == null) {
-            cartState = CartState.ACTIVE;
+            cartState = "ACTIVE";
         }
     }
 }

@@ -24,23 +24,20 @@ public class Product {
     @Column(name = "product_name", nullable = false, length = 255)
     private String productName;
 
-    @Column(name = "description", nullable = false, columnDefinition = "varchar(1000)")
+    @Column(name = "description", nullable = false, columnDefinition = "text")
     private String description;
 
     @Column(name = "image_src", length = 512)
     private String imageSrc;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "quantity_state", nullable = false, length = 20)
-    private QuantityState quantityState;
+    private String quantityState;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "product_state", nullable = false, length = 20)
-    private ProductState productState;
+    private String productState;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "product_category", nullable = false, length = 20)
-    private ProductCategory productCategory;
+    private String productCategory;
 
     @Column(name = "price", nullable = false, precision = 19, scale = 2)
     private BigDecimal price;

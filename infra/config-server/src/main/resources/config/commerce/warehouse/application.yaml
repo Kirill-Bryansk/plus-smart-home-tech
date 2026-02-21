@@ -4,7 +4,7 @@ server:
 spring:
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate  # Проверять соответствие сущностей
     show-sql: true
     properties:
       hibernate:
@@ -12,9 +12,16 @@ spring:
         default_schema: warehouse_schema
   sql:
     init:
-      mode: always
+      mode: always  # Создать таблицы по скрипту
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/commerce_warehouse
     username: postgres
     password: 12345
+
+# Детальное логирование SQL
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.datasource.init: DEBUG
