@@ -1,5 +1,6 @@
 package ru.yandex.practicum.shoppingcart.service;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     }
 
     @Transactional
+    @CircuitBreaker(name = "warehouseClient", fallbackMethod = "addProductToCartFallback")
     @Override
     public ShoppingCartDto addProductToCart(String username, Map<UUID, Long> products) {
         log.info("Добавление товаров в корзину пользователя: {}, товары: {}", username, products);
@@ -61,9 +63,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                     return repository.save(newCart);
                 });
 
-        // Проверяем наличие на складе
+        // Проверяем наличие на складе через Circuit Breaker
         ShoppingCartDto cartDto = mapper.toDto(cart);
         cartDto.setProducts(convertToMap(cart.getProducts()));
+        cartDto.setShoppingCartId(cart.getShoppingCartId());
+        
+        // Вызов warehouse через Circuit Breaker
+        BookedProductsDto booked = warehouseClient.checkProductQuantityInWarehouse(cartDto).getBody();
+        log.info("Проверка на складе пройдена: weight={}, volume={}, fragile={}", 
+                booked.getDeliveryWeight(), booked.getDeliveryVolume(), booked.getFragile());
         
         // Добавляем новые товары
         for (Map.Entry<UUID, Long> entry : products.entrySet()) {
@@ -90,6 +98,56 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         repository.save(cart);
         log.info("Товары добавлены в корзину: cartId={}", cart.getShoppingCartId());
         
+        ShoppingCartDto result = mapper.toDto(cart);
+        result.setProducts(convertToMap(cart.getProducts()));
+        return result;
+    }
+
+    /**
+     * Fallback метод для addProductToCart.
+     * Вызывается когда Circuit Breaker открыт (warehouse недоступен).
+     */
+    @Transactional
+    public ShoppingCartDto addProductToCartFallback(String username, Map<UUID, Long> products, Throwable t) {
+        log.error("Circuit Breaker сработал! Warehouse недоступен. Используем fallback логику. Ошибка: {}",
+                t.getMessage());
+
+        // Fallback логика: добавляем товары без проверки на складе
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Имя пользователя не должно быть пустым");
+        }
+
+        ShoppingCart cart = repository.findByUsername(username)
+                .orElseGet(() -> {
+                    ShoppingCart newCart = new ShoppingCart();
+                    newCart.setUsername(username);
+                    return repository.save(newCart);
+                });
+
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
+            UUID productId = entry.getKey();
+            Long quantity = entry.getValue();
+
+            CartProduct existingProduct = cart.getProducts().stream()
+                    .filter(p -> p.getProductId().equals(productId))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existingProduct != null) {
+                existingProduct.setQuantity(existingProduct.getQuantity() + quantity);
+            } else {
+                CartProduct newProduct = new CartProduct();
+                newProduct.setShoppingCartId(cart.getShoppingCartId());
+                newProduct.setProductId(productId);
+                newProduct.setQuantity(quantity);
+                newProduct.setShoppingCart(cart);
+                cart.getProducts().add(newProduct);
+            }
+        }
+
+        repository.save(cart);
+        log.info("Товары добавлены в корзину без проверки на складе (fallback): cartId={}", cart.getShoppingCartId());
+
         ShoppingCartDto result = mapper.toDto(cart);
         result.setProducts(convertToMap(cart.getProducts()));
         return result;

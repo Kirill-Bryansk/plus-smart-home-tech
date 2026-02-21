@@ -33,13 +33,41 @@ feign:
       warehouse:
         connectTimeout: 5000
         readTimeout: 5000
+  circuitbreaker:
+    enabled: true
 
-# Circuit Breaker (опционально)
+# Circuit Breaker (Resilience4j)
 resilience4j:
   circuitbreaker:
     instances:
       warehouseClient:
+        # Количество последних вызовов для анализа
         slidingWindowSize: 10
+        # Процент ошибок для открытия (50%)
         failureRateThreshold: 50
+        # Время в открытом состоянии (10 секунд)
         waitDurationInOpenState: 10000
+        # Количество вызовов в полуоткрытом состоянии
         permittedNumberOfCallsInHalfOpenState: 5
+        # Минимальное количество вызовов перед расчётом процента ошибок
+        minimumNumberOfCalls: 5
+        # Автоматический переход из открытого в полуоткрытое состояние
+        automaticTransitionFromOpenToHalfOpenState: true
+  # Таймауты
+  timelimiter:
+    instances:
+      warehouseClient:
+        timeoutDuration: 5s
+
+# Actuator endpoints для мониторинга Circuit Breaker
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always

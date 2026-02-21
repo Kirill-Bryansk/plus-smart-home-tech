@@ -1,0 +1,43 @@
+# Тестовая конфигурация для Circuit Breaker тестов
+spring:
+  application:
+    name: shopping-cart-test
+  
+  # Отключаем Config Server для тестов
+  cloud:
+    config:
+      enabled: false
+  
+  # H2 база данных для тестов
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password: 
+  
+  # JPA настройки для тестов
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+# Отключаем Eureka для тестов
+eureka:
+  client:
+    enabled: false
+
+# Circuit Breaker настройки для тестов (быстрый переход в OPEN)
+resilience4j:
+  circuitbreaker:
+    instances:
+      warehouseClient:
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        permittedNumberOfCallsInHalfOpenState: 2
+        minimumNumberOfCalls: 2
+        automaticTransitionFromOpenToHalfOpenState: true
