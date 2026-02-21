@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS shopping_cart_schema.cart_products (
     product_id UUID NOT NULL,
 
     -- Количество единиц товара в корзине (должно быть > 0)
-    quantity INTEGER NOT NULL,
+    quantity BIGINT NOT NULL,
 
     -- Первичный ключ (составной)
     PRIMARY KEY (shopping_cart_id, product_id),

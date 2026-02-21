@@ -2,14 +2,13 @@ package ru.yandex.practicum.shoppingcart.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.util.UUID;
 
 /**
  * Товар в корзине.
  */
 @Entity
-@Table(name = "cart_products")
+@Table(name = "cart_products", schema = "shopping_cart_schema")
 @Data
 @IdClass(CartProductId.class)
 public class CartProduct {
@@ -23,7 +22,7 @@ public class CartProduct {
     private UUID productId;
 
     @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    private Long quantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shopping_cart_id", insertable = false, updatable = false)

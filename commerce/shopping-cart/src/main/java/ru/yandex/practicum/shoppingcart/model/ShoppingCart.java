@@ -2,7 +2,6 @@ package ru.yandex.practicum.shoppingcart.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import ru.yandex.practicum.model.enums.CartState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +10,7 @@ import java.util.UUID;
  * Корзина пользователя.
  */
 @Entity
-@Table(name = "shopping_carts")
+@Table(name = "shopping_carts", schema = "shopping_cart_schema")
 @Data
 public class ShoppingCart {
 
