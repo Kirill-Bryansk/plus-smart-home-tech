@@ -11,7 +11,6 @@ import java.util.UUID;
 
 /**
  * Товар интернет-магазина.
- * Сущность совместима с H2 (dev) и PostgreSQL (prod).
  */
 @Entity
 @Table(name = "product")
@@ -25,7 +24,7 @@ public class Product {
     @Column(name = "product_name", nullable = false, length = 255)
     private String productName;
 
-    @Column(name = "description", nullable = false, columnDefinition = "text")
+    @Column(name = "description", nullable = false, columnDefinition = "varchar(1000)")
     private String description;
 
     @Column(name = "image_src", length = 512)

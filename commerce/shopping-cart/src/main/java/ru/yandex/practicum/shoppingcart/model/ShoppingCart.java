@@ -9,7 +9,6 @@ import java.util.UUID;
 
 /**
  * Корзина пользователя.
- * Сущность совместима с H2 (dev) и PostgreSQL (prod).
  */
 @Entity
 @Table(name = "shopping_carts")

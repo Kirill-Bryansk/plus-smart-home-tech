@@ -7,7 +7,6 @@ import java.util.UUID;
 
 /**
  * Товар в корзине.
- * Сущность совместима с H2 (dev) и PostgreSQL (prod).
  */
 @Entity
 @Table(name = "cart_products")

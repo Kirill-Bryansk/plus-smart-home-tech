@@ -7,7 +7,6 @@ import java.util.UUID;
 
 /**
  * Товар на складе.
- * Сущность совместима с H2 (dev) и PostgreSQL (prod).
  */
 @Entity
 @Table(name = "warehouse_product")
