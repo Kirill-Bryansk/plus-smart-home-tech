@@ -1,10 +1,11 @@
 package ru.yandex.practicum.shoppingstore.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import ru.yandex.practicum.model.enums.ProductState;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -12,7 +13,10 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "product", schema = "shopping_store_schema")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
 
     @Id
@@ -62,5 +66,28 @@ public class Product {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Objects.equals(productId, product.productId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId);
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+               "productId=" + productId +
+               ", productName='" + productName + '\'' +
+               ", productState=" + productState +
+               ", price=" + price +
+               '}';
     }
 }

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.model.dto.shoppingcart.ChangeProductQuantityRequest;
 import ru.yandex.practicum.model.dto.warehouse.ShoppingCartDto;
 import ru.yandex.practicum.shoppingcart.service.ShoppingCartService;
 
@@ -75,14 +76,5 @@ public class ShoppingCartController {
         ShoppingCartDto cart = shoppingCartService.changeProductQuantity(
                 username, request.getProductId(), request.getNewQuantity());
         return ResponseEntity.ok(cart);
-    }
-
-    /**
-     * DTO для запроса изменения количества товара.
-     */
-    @lombok.Data
-    public static class ChangeProductQuantityRequest {
-        private UUID productId;
-        private Long newQuantity;
     }
 }

@@ -1,8 +1,9 @@
 package ru.yandex.practicum.warehouse.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -10,7 +11,10 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "warehouse_product", schema = "warehouse_schema")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class WarehouseProduct {
 
     @Id
@@ -34,4 +38,30 @@ public class WarehouseProduct {
 
     @Column(name = "quantity", nullable = false)
     private Long quantity;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WarehouseProduct that = (WarehouseProduct) o;
+        return Objects.equals(productId, that.productId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(productId);
+    }
+
+    @Override
+    public String toString() {
+        return "WarehouseProduct{" +
+               "productId=" + productId +
+               ", width=" + width +
+               ", height=" + height +
+               ", depth=" + depth +
+               ", weight=" + weight +
+               ", fragile=" + fragile +
+               ", quantity=" + quantity +
+               '}';
+    }
 }
