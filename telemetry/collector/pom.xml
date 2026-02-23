@@ -106,6 +106,24 @@
             <version>3.1.0.RELEASE</version>
         </dependency>
 
+        <!-- клиентская зависимость spring-cloud-config-client.
+        Самый удобный способ её добавить — использовать стартер -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+
+        <!-- Spring Retry для повторных попыток подключения -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+
+        <!-- Клиент Eureka -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
     </dependencies>
 
 

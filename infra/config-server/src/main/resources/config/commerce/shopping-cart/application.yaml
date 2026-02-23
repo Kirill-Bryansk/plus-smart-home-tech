@@ -1,0 +1,73 @@
+server:
+  port: 0
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Проверять соответствие сущностей
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: shopping_cart_schema
+  sql:
+    init:
+      mode: always  # Создать таблицы по скрипту
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/commerce_shopping_cart
+    username: postgres
+    password: 12345
+
+# Детальное логирование SQL
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.datasource.init: DEBUG
+
+# Feign Client для warehouse
+feign:
+  client:
+    config:
+      warehouse:
+        connectTimeout: 5000
+        readTimeout: 5000
+  circuitbreaker:
+    enabled: true
+
+# Circuit Breaker (Resilience4j)
+resilience4j:
+  circuitbreaker:
+    instances:
+      warehouseClient:
+        # Количество последних вызовов для анализа
+        slidingWindowSize: 10
+        # Процент ошибок для открытия (50%)
+        failureRateThreshold: 50
+        # Время в открытом состоянии (10 секунд)
+        waitDurationInOpenState: 10000
+        # Количество вызовов в полуоткрытом состоянии
+        permittedNumberOfCallsInHalfOpenState: 5
+        # Минимальное количество вызовов перед расчётом процента ошибок
+        minimumNumberOfCalls: 5
+        # Автоматический переход из открытого в полуоткрытое состояние
+        automaticTransitionFromOpenToHalfOpenState: true
+  # Таймауты
+  timelimiter:
+    instances:
+      warehouseClient:
+        timeoutDuration: 5s
+
+# Actuator endpoints для мониторинга Circuit Breaker
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,circuitbreakers
+  endpoint:
+    health:
+      show-details: always

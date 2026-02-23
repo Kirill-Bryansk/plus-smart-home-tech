@@ -1,26 +1,26 @@
-# Конфигурация приложения Aggregator
+spring:
+  application:
+    name: aggregator
 
-logging:
-  level:
-    ru.yandex.practicum.aggregator: DEBUG
-    org.apache.kafka: WARN
-    org.springframework: INFO
+  config:
+    import: "configserver:"
 
-aggregator:
-  kafka:
-    # Настройки для Consumer
-    consumer:
-      bootstrap.servers: "localhost:9092"
-      group.id: "telemetry-aggregator-group"
-      key.deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
-      value.deserializer: "ru.yandex.practicum.aggregator.deserializer.SensorEventDeserializer"
-      enable.auto.commit: "false"
-      auto.offset.reset: "earliest"
+  cloud:
+    config:
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
+      discovery:
+        enabled: true
+        serviceId: config-server
 
-    # Настройки для Producer
-    producer:
-      bootstrap.servers: "localhost:9092"
-      key.serializer: "org.apache.kafka.common.serialization.StringSerializer"
-      value.serializer: "ru.yandex.practicum.aggregator.serializer.GeneralAvroSerializer"
-      acks: "all"
-      retries: "3"
+server:
+  port: 0
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
+  instance:
+    preferIpAddress: true
