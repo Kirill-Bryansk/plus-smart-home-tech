@@ -25,6 +25,8 @@ docker-compose up -d
 
 Все микросервисы запускаются **без указания профиля** (используется default/PostgreSQL):
 
+#### Commerce-сервисы
+
 ```bash
 # shopping-store
 cd commerce/shopping-store
@@ -39,16 +41,44 @@ cd commerce/shopping-cart
 mvn spring-boot:run
 ```
 
-**Важно:** Сервисы регистрируются в Eureka с **динамическими портами**.
+#### Telemetry-сервисы
+
+```bash
+# collector (GRPC-сервер для приёма телеметрии)
+cd telemetry/collector
+mvn spring-boot:run
+
+# aggregator (агрегация событий Kafka)
+cd telemetry/aggregator
+mvn spring-boot:run
+
+# analyzer (анализ и сохранение в БД)
+cd telemetry/analyzer
+mvn spring-boot:run
+```
+
+#### Hub Router (эмулятор хабов и сенсоров)
+
+```bash
+cd hub-router
+mvn spring-boot:run
+```
+
+**Важно:** Сервисы регистрируются в Eureka с **динамическими портами** (кроме Eureka и discovery-server).
 
 ### 3. Проверка работы
 
 #### Eureka Dashboard
 Откройте `http://localhost:8761` — должны быть видны все сервисы:
 - CONFIG-SERVER
+- DISCOVERY-SERVER
 - SHOPPING-STORE
 - WAREHOUSE
 - SHOPPING-CART
+- COLLECTOR
+- AGGREGATOR
+- ANALYZER
+- HUB-ROUTER
 
 #### Проверка через API
 
@@ -71,6 +101,10 @@ curl http://localhost:XXXXX/actuator/health
 │  • SHOPPING-STORE → динамический порт                  │
 │  • WAREHOUSE → динамический порт                        │
 │  • SHOPPING-CART → динамический порт                    │
+│  • COLLECTOR → динамический порт                        │
+│  • AGGREGATOR → динамический порт                       │
+│  • ANALYZER → динамический порт                         │
+│  • HUB-ROUTER → динамический порт                       │
 └─────────────────────────────────────────────────────────┘
               ↑
               │
@@ -82,10 +116,36 @@ curl http://localhost:XXXXX/actuator/health
 │ (dynamic) │   │ (dynamic) │
 └───────────┘   └───────────┘
                       ↓
-              ┌───────────────┐
-              │  PostgreSQL   │
-              │  localhost:5432  │
-              └───────────────┘
+        ┌─────────────┴─────────────┐
+        │                           │
+┌───────────────┐         ┌─────────────────┐
+│  PostgreSQL   │         │     Kafka       │
+│  localhost:5432  │         │  localhost:9092 │
+│               │         │                 │
+│ • telemetry_  │         │ • telemetry.    │
+│   analyzer    │         │   sensors.v1    │
+│ • commerce_   │         │ • telemetry.    │
+│   *_schema    │         │   snapshots.v1  │
+│               │         │ • telemetry.    │
+│               │         │   hubs.v1       │
+└───────────────┘         └─────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                    GRPC-сервисы                         │
+│  • Collector: localhost:59091 (сервер)                 │
+│  • Hub-Router: эмуляция хабов (клиент к Collector)     │
+│  • Analyzer → Hub-Router: localhost:59090 (клиент)     │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Поток данных Telemetry
+
+```
+Hub-Router → (GRPC) → Collector → (Kafka) → Aggregator → (Kafka) → Analyzer → (JPA) → PostgreSQL
+                                                              ↓
+                                                         (GRPC-клиент)
+                                                              ↓
+                                                      Hub-Router (обратная связь)
 ```
 
 ---
@@ -94,13 +154,24 @@ curl http://localhost:XXXXX/actuator/health
 
 Каждый микросервис имеет **собственную схему** в PostgreSQL:
 
-| Сервис | Схема БД | Таблицы |
-|--------|----------|---------|
-| **shopping-store** | `shopping_store_schema` | `product` |
-| **warehouse** | `warehouse_schema` | `warehouse_product` |
-| **shopping-cart** | `shopping_cart_schema` | `shopping_carts`, `cart_products` |
+| Сервис | База данных | Схема | Таблицы |
+|--------|----------|---------|---------|
+| **shopping-store** | `commerce_shopping_store` | `shopping_store_schema` | `product` |
+| **warehouse** | `commerce_warehouse` | `warehouse_schema` | `warehouse_product` |
+| **shopping-cart** | `commerce_shopping_cart` | `shopping_cart_schema` | `shopping_carts`, `cart_products` |
+| **analyzer** | `telemetry_analyzer` | `public` | `sensor_events`, `hub_events` (из schema.sql) |
 
 **Базы данных создаются автоматически** при запуске `db-init`.
+
+---
+
+## Kafka-топики
+
+| Топик | Описание | Producer | Consumer |
+|-------|----------|----------|----------|
+| `telemetry.sensors.v1` | События сенсоров | Collector | Aggregator |
+| `telemetry.snapshots.v1` | Снэпшоты состояний | Aggregator | Analyzer |
+| `telemetry.hubs.v1` | События хабов | Collector | Analyzer |
 
 ---
 
@@ -117,7 +188,9 @@ infra/config-server/src/main/resources/config/
 │   ├── warehouse/application.yaml
 │   └── shopping-cart/application.yaml
 └── telemetry/
-    └── ...
+    ├── collector/application.yaml
+    ├── aggregator/application.yaml
+    └── analyzer/application.yaml
 ```
 
 ### Локальная конфигурация
@@ -134,6 +207,14 @@ spring:
         enabled: true
         serviceId: config-server
 ```
+
+### GRPC-порты
+
+| Сервис | Порт | Тип |
+|--------|------|-----|
+| **Collector** | 59091 | Сервер |
+| **Hub-Router** | - | Клиент (подключается к Collector) |
+| **Analyzer** | - | Клиент (подключается к Hub-Router) |
 
 ---
 
@@ -163,6 +244,18 @@ docker-compose down
 2. Проверьте, что БД созданы: `docker exec postgres psql -U postgres -c "\l"`
 3. Проверьте логи `db-init`: `docker-compose logs db-init`
 
+### Ошибка подключения к Kafka
+
+1. Проверьте, что Kafka запущен: `docker-compose ps`
+2. Проверьте логи: `docker-compose logs kafka`
+3. Убедитесь, что топики созданы: `docker-compose logs kafka-init-topics`
+
+### GRPC-ошибки (Collector/Hub-Router)
+
+1. Убедитесь, что Collector запущен первым (порт 59091)
+2. Проверьте конфиг `hub-router`: `grpc.collector.host/port`
+3. Проверьте конфиг `analyzer`: `grpc.client.hub-router.address`
+
 ### Конфликт портов
 
 Все микросервисы используют **динамические порты** (`server.port: 0`). Конфликты исключены.
@@ -178,13 +271,59 @@ logging:
   level:
     ru.yandex.practicum.*: DEBUG
     org.hibernate.SQL: DEBUG
+    org.springframework.kafka: INFO
 ```
 
 ---
 
 ## Дополнительная информация
 
-- **Взаимодействие сервисов**: через Feign-клиенты (REST)
-- **Общие DTO**: модуль `interaction-api`
-- **Service Discovery**: Eureka
-- **Externalized Configuration**: Spring Cloud Config
+### Взаимодействие сервисов
+
+| Тип | Сервисы |
+|-----|---------|
+| **REST/Feign** | Commerce-сервисы (shopping-cart → warehouse) |
+| **GRPC** | Collector ←→ Hub-Router, Analyzer → Hub-Router |
+| **Kafka** | Collector → Aggregator → Analyzer |
+
+### Общие модули
+
+- **commerce/interaction-api** — общие DTO для commerce-сервисов
+- **telemetry/serialization** — Avro-сериализация для Kafka
+
+### Service Discovery
+
+- **Eureka** — регистрация и обнаружение сервисов
+
+### Externalized Configuration
+
+- **Spring Cloud Config** — централизованная конфигурация
+
+### Circuit Breaker
+
+- **Resilience4j** — в shopping-cart для вызовов warehouse
+
+---
+
+## Структура проекта
+
+```
+plus-smart-home-tech/
+├── commerce/              # Commerce-домен
+│   ├── shopping-store/    # Каталог товаров
+│   ├── warehouse/         # Склад
+│   ├── shopping-cart/     # Корзина покупок
+│   └── interaction-api/   # Общие DTO
+├── telemetry/             # Телеметрия
+│   ├── collector/         # Сбор событий (GRPC-сервер)
+│   ├── aggregator/        # Агрегация (Kafka)
+│   ├── analyzer/          # Анализ и сохранение (БД)
+│   └── serialization/     # Avro-сериализация
+├── hub-router/            # Эмулятор умного дома
+├── grpc-echo-client/      # Пример GRPC-клиента
+├── grpc-echo-server/      # Пример GRPC-сервера
+├── infra/                 # Инфраструктура
+│   ├── config-server/     # Config Server
+│   └── discovery-server/  # Eureka Server
+└── compose.yaml           # Docker-инфраструктура
+```
