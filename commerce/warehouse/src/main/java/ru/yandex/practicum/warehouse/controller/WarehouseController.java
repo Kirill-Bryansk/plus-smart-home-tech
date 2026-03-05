@@ -20,7 +20,7 @@ public class WarehouseController implements WarehouseApi {
     @PutMapping("/api/v1/warehouse")
     public ResponseEntity<Void> addNewProductInWarehouse(
             @Valid @RequestBody NewProductInWarehouseRequest product) {
-        log.info("PUT /api/v1/warehouse productId={}", product.getProductId());
+        log.info("PUT /api/v1/warehouse - получен запрос на добавление нового товара productId={}", product.getProductId());
         warehouseService.addNewProductInWarehouse(product);
         return ResponseEntity.ok().build();
     }
@@ -29,7 +29,7 @@ public class WarehouseController implements WarehouseApi {
     @PostMapping("/api/v1/warehouse/check")
     public ResponseEntity<BookedProductsDto> checkProductQuantityInWarehouse(
             @RequestBody ShoppingCartDto shoppingCart) {
-        log.info("POST /api/v1/warehouse/check cartId={}", shoppingCart.getShoppingCartId());
+        log.info("POST /api/v1/warehouse/check - проверка наличия товаров для корзины cartId={}", shoppingCart.getShoppingCartId());
         BookedProductsDto result = warehouseService.checkProductQuantityInWarehouse(shoppingCart);
         return ResponseEntity.ok(result);
     }
@@ -38,7 +38,7 @@ public class WarehouseController implements WarehouseApi {
     @PostMapping("/api/v1/warehouse/add")
     public ResponseEntity<Void> addProductToWarehouse(
             @Valid @RequestBody AddProductToWarehouseRequest request) {
-        log.info("POST /api/v1/warehouse/add productId={}", request.getProductId());
+        log.info("POST /api/v1/warehouse/add - добавление товара на склад productId={}", request.getProductId());
         warehouseService.addProductToWarehouse(request);
         return ResponseEntity.ok().build();
     }
@@ -46,7 +46,7 @@ public class WarehouseController implements WarehouseApi {
     @Override
     @GetMapping("/api/v1/warehouse/address")
     public ResponseEntity<AddressDto> getWarehouseAddress() {
-        log.info("GET /api/v1/warehouse/address");
+        log.info("GET /api/v1/warehouse/address - запрос адреса склада");
         AddressDto address = warehouseService.getWarehouseAddress();
         return ResponseEntity.ok(address);
     }
