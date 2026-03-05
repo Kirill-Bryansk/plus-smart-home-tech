@@ -21,7 +21,17 @@ docker-compose up -d
 - **Eureka**: `http://localhost:8761`
 - **Config Server**: динамический порт (регистрируется в Eureka)
 
-### 2. Запуск микросервисов
+### 2. Запуск API Gateway
+
+```bash
+# gateway (единая точка входа для всех запросов)
+cd infra/gateway
+mvn spring-boot:run
+```
+
+**Порт:** `http://localhost:8080`
+
+### 3. Запуск микросервисов
 
 Все микросервисы запускаются **без указания профиля** (используется default/PostgreSQL):
 
@@ -64,12 +74,13 @@ cd hub-router
 mvn spring-boot:run
 ```
 
-**Важно:** Сервисы регистрируются в Eureka с **динамическими портами** (кроме Eureka и discovery-server).
+**Важно:** Сервисы регистрируются в Eureka с **динамическими портами** (кроме Eureka, discovery-server и gateway).
 
-### 3. Проверка работы
+### 4. Проверка работы
 
 #### Eureka Dashboard
 Откройте `http://localhost:8761` — должны быть видны все сервисы:
+- GATEWAY (порт 8080)
 - CONFIG-SERVER
 - DISCOVERY-SERVER
 - SHOPPING-STORE
@@ -81,6 +92,24 @@ mvn spring-boot:run
 - HUB-ROUTER
 
 #### Проверка через API
+
+**Через Gateway (рекомендуется):**
+
+```bash
+# shopping-cart: получить корзину
+curl "http://localhost:8080/api/v1/shopping-cart?username=test"
+
+# shopping-store: получить товары категории FOOD
+curl "http://localhost:8080/api/v1/shopping-store?category=FOOD&page=0&size=10"
+
+# Gateway health
+curl http://localhost:8080/actuator/health
+
+# Gateway routes (список маршрутов)
+curl http://localhost:8080/actuator/gateway/routes
+```
+
+**Напрямую к сервису (если нужно):**
 
 Найдите порт вашего сервиса в Eureka и проверьте:
 
@@ -97,6 +126,7 @@ curl http://localhost:XXXXX/actuator/health
 ┌─────────────────────────────────────────────────────────┐
 │                    Eureka (8761)                        │
 │  Реестр сервисов:                                       │
+│  • GATEWAY → 8080                                      │
 │  • CONFIG-SERVER → динамический порт                   │
 │  • SHOPPING-STORE → динамический порт                  │
 │  • WAREHOUSE → динамический порт                        │
@@ -135,6 +165,14 @@ curl http://localhost:XXXXX/actuator/health
 │  • Collector: localhost:59091 (сервер)                 │
 │  • Hub-Router: эмуляция хабов (клиент к Collector)     │
 │  • Analyzer → Hub-Router: localhost:59090 (клиент)     │
+└─────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                    API Gateway (8080)                   │
+│  Единая точка входа для клиентских запросов:           │
+│  • /api/v1/shopping-cart/** → SHOPPING-CART            │
+│  • /api/v1/shopping-store/** → SHOPPING-STORE          │
+│  Маршрутизация через Spring Cloud Gateway              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -256,6 +294,13 @@ docker-compose down
 2. Проверьте конфиг `hub-router`: `grpc.collector.host/port`
 3. Проверьте конфиг `analyzer`: `grpc.client.hub-router.address`
 
+### Gateway-ошибки (маршрутизация)
+
+1. Проверьте, что сервис зарегистрирован в Eureka: `http://localhost:8761`
+2. Проверьте роуты Gateway: `curl http://localhost:8080/actuator/gateway/routes`
+3. Убедитесь, что путь запроса совпадает с предикатом роута (`/api/v1/...`)
+4. Проверьте логи Gateway с уровнем DEBUG
+
 ### Конфликт портов
 
 Все микросервисы используют **динамические порты** (`server.port: 0`). Конфликты исключены.
@@ -285,6 +330,7 @@ logging:
 | **REST/Feign** | Commerce-сервисы (shopping-cart → warehouse) |
 | **GRPC** | Collector ←→ Hub-Router, Analyzer → Hub-Router |
 | **Kafka** | Collector → Aggregator → Analyzer |
+| **Gateway** | Клиент → Gateway → микросервисы |
 
 ### Общие модули
 
@@ -299,9 +345,15 @@ logging:
 
 - **Spring Cloud Config** — централизованная конфигурация
 
+### API Gateway
+
+- **Spring Cloud Gateway** — единая точка входа, маршрутизация запросов
+- Роуты: `/api/v1/shopping-cart/**`, `/api/v1/shopping-store/**`
+- CircuitBreaker и Retry для отказоустойчивости
+
 ### Circuit Breaker
 
-- **Resilience4j** — в shopping-cart для вызовов warehouse
+- **Resilience4j** — в shopping-cart для вызовов warehouse, в gateway для всех маршрутов
 
 ---
 
@@ -324,6 +376,7 @@ plus-smart-home-tech/
 ├── grpc-echo-server/      # Пример GRPC-сервера
 ├── infra/                 # Инфраструктура
 │   ├── config-server/     # Config Server
-│   └── discovery-server/  # Eureka Server
+│   ├── discovery-server/  # Eureka Server
+│   └── gateway/           # API Gateway (маршрутизация)
 └── compose.yaml           # Docker-инфраструктура
 ```

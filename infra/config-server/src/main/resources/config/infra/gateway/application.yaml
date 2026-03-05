@@ -1,0 +1,56 @@
+spring:
+  cloud:
+    gateway:
+      # Включает автоматическое создание маршрутов на основе сервисов в Eureka
+      discovery:
+        locator:
+          enabled: false  # Отключаем автоматические роуты # true - динамическая маршрутизация через Eureka
+
+      # Статические маршруты
+      routes:
+        #  МАРШРУТ ДЛЯ СЕРВИСА КОРЗИНЫ
+        - id: shopping-cart-route
+          uri: lb://shopping-cart                    # балансировка через Eureka
+          predicates:
+            - Path=/api/v1/shopping-cart/**                  # все запросы к корзине
+          filters:
+            - name: CircuitBreaker                    # защита от сбоев
+              args:
+                name: shoppingCartCircuitBreaker
+
+        # МАРШРУТ ДЛЯ МАГАЗИНА С ПОВТОРАМИ
+        - id: shopping-store-route
+          uri: lb://shopping-store
+          predicates:
+            - Path=/api/v1/shopping-store/**
+          filters:
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,NOT_FOUND
+                methods: GET
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
+# Порт Gateway
+server:
+  port: 8080
+
+# Мониторинг
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,gateway,metrics
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
