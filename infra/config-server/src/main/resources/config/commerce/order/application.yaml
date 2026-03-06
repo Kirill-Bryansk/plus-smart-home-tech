@@ -1,0 +1,41 @@
+# Конфигурация сервиса Order
+server:
+  port: 0  # Динамический порт (выбирается случайно при запуске)
+
+spring:
+  application:
+    name: order  # Имя сервиса для регистрации в Eureka
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Проверка соответствия сущностей и БД
+    show-sql: true  # Показывать SQL-запросы в логах
+    properties:
+      hibernate:
+        format_sql: true  # Форматировать SQL для читаемости
+        default_schema: order_schema  # Схема БД для сервиса заказов
+  sql:
+    init:
+      mode: always  # Инициализировать БД при старте
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/commerce_order  # БД для заказов
+    username: postgres
+    password: 12345
+
+# Логирование SQL и Hibernate
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.datasource.init: DEBUG
+
+# Настройки Eureka (Service Discovery)
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}  # Уникальный ID экземпляра
+    prefer-ip-address: true  # Использовать IP вместо hostname
+  client:
+    healthcheck:
+      enabled: true  # Проверка здоровья сервиса
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/  # Адрес Eureka Server
