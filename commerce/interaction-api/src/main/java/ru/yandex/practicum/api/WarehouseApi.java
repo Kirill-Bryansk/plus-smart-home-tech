@@ -1,6 +1,7 @@
 package ru.yandex.practicum.api;
 
 import jakarta.validation.Valid;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.model.dto.warehouse.*;
@@ -10,8 +11,9 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * API для склада интернет-магазина.
+ * Feign-клиент для сервиса Warehouse.
  */
+@FeignClient(name = "warehouse")
 public interface WarehouseApi {
 
     /**
