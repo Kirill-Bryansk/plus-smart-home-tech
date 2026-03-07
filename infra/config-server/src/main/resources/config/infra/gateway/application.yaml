@@ -68,6 +68,16 @@ spring:
               args:
                 name: deliveryCircuitBreaker
 
+        # МАРШРУТ ДЛЯ СЕРВИСА СКЛАДА (Warehouse)
+        - id: warehouse-route
+          uri: lb://warehouse
+          predicates:
+            - Path=/api/v1/warehouse/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: warehouseCircuitBreaker
+
 # Порт Gateway (единая точка входа для клиентов)
 server:
   port: 8080
