@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.model.dto.warehouse.*;
 import ru.yandex.practicum.warehouse.exception.ProductNotInWarehouseException;
 import ru.yandex.practicum.warehouse.mapper.WarehouseMapper;
+import ru.yandex.practicum.warehouse.model.OrderBooking;
 import ru.yandex.practicum.warehouse.model.WarehouseProduct;
+import ru.yandex.practicum.warehouse.repository.OrderBookingRepository;
 import ru.yandex.practicum.warehouse.repository.WarehouseProductRepository;
 
 import java.util.Map;
@@ -21,6 +23,7 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     private final WarehouseProductRepository repository;
     private final WarehouseMapper mapper;
+    private final OrderBookingRepository bookingRepository;
 
     // Случайный адрес склада (выбирается при инициализации)
     private static final String[] ADDRESSES = {"ADDRESS_1", "ADDRESS_2"};
@@ -128,11 +131,24 @@ public class WarehouseServiceImpl implements WarehouseService {
     public BookedProductsDto assemblyProductForOrderFromShoppingCart(UUID shoppingCartId, UUID orderId) {
         log.info("Сборка товаров для заказа: shoppingCartId={}, orderId={}", shoppingCartId, orderId);
 
-        // В упрощённой версии просто проверяем наличие товаров
-        // В реальной реализации здесь нужно создавать сущность OrderBooking
-        // и уменьшать количество товаров на складе
+        // В реальной реализации здесь нужно получить корзину из shopping-cart
+        // и проверить наличие товаров. Для упрощения создаём бронирование
+        // с нулевыми значениями (предполагается, что проверка уже была сделана)
 
-        // Для примера возвращаем заглушку
+        // Создаём сущность бронирования
+        OrderBooking booking = OrderBooking.builder()
+                .bookingId(UUID.randomUUID())
+                .orderId(orderId)
+                .shoppingCartId(shoppingCartId)
+                .totalWeight(0.0)
+                .totalVolume(0.0)
+                .fragile(false)
+                .build();
+
+        bookingRepository.save(booking);
+        log.info("Создано бронирование: bookingId={}, orderId={}", booking.getBookingId(), orderId);
+
+        // Возвращаем заглушку (в реальности нужно рассчитать вес и объём)
         BookedProductsDto result = new BookedProductsDto();
         result.setDeliveryWeight(0.0);
         result.setDeliveryVolume(0.0);
@@ -146,8 +162,19 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Transactional
     public void shippedToDelivery(UUID orderId, UUID deliveryId) {
         log.info("Передача товаров в доставку: orderId={}, deliveryId={}", orderId, deliveryId);
-        // В реальной реализации здесь нужно обновить сущность OrderBooking
-        // и добавить deliveryId
+
+        // Находим бронирование по orderId и обновляем deliveryId
+        OrderBooking booking = bookingRepository.findByOrderId(orderId)
+                .orElseThrow(() -> {
+                    log.error("Бронирование не найдено для заказа: {}", orderId);
+                    return new ProductNotInWarehouseException(
+                            "Бронирование не найдено для orderId=" + orderId);
+                });
+
+        booking.setDeliveryId(deliveryId);
+        bookingRepository.save(booking);
+
+        log.info("Доставка связана с бронированием: orderId={}, deliveryId={}", orderId, deliveryId);
     }
 
     @Override
