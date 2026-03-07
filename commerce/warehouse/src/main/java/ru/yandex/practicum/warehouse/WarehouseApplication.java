@@ -11,7 +11,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  */
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients
+@EnableFeignClients(basePackages = {"ru.yandex.practicum.api", "ru.yandex.practicum.warehouse"})
 public class WarehouseApplication {
 
     public static void main(String[] args) {
