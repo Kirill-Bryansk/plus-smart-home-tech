@@ -9,6 +9,9 @@ import ru.yandex.practicum.api.WarehouseApi;
 import ru.yandex.practicum.model.dto.warehouse.*;
 import ru.yandex.practicum.warehouse.service.WarehouseService;
 
+import java.util.Map;
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -49,5 +52,36 @@ public class WarehouseController implements WarehouseApi {
         log.info("GET /api/v1/warehouse/address - запрос адреса склада");
         AddressDto address = warehouseService.getWarehouseAddress();
         return ResponseEntity.ok(address);
+    }
+
+    @Override
+    @PostMapping("/api/v1/warehouse/assembly")
+    public ResponseEntity<BookedProductsDto> assemblyProductForOrderFromShoppingCart(
+            @RequestParam UUID shoppingCartId,
+            @RequestParam UUID orderId) {
+        log.info("POST /api/v1/warehouse/assembly - сборка товаров для заказа: shoppingCartId={}, orderId={}", 
+            shoppingCartId, orderId);
+        BookedProductsDto result = warehouseService.assemblyProductForOrderFromShoppingCart(shoppingCartId, orderId);
+        return ResponseEntity.ok(result);
+    }
+
+    @Override
+    @PostMapping("/api/v1/warehouse/shipped")
+    public ResponseEntity<Void> shippedToDelivery(
+            @RequestParam UUID orderId,
+            @RequestParam UUID deliveryId) {
+        log.info("POST /api/v1/warehouse/shipped - передача в доставку: orderId={}, deliveryId={}", 
+            orderId, deliveryId);
+        warehouseService.shippedToDelivery(orderId, deliveryId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @PostMapping("/api/v1/warehouse/return")
+    public ResponseEntity<Void> returnProduct(
+            @RequestBody Map<UUID, Long> products) {
+        log.info("POST /api/v1/warehouse/return - возврат товаров на склад: количество={}", products.size());
+        warehouseService.returnProduct(products);
+        return ResponseEntity.ok().build();
     }
 }

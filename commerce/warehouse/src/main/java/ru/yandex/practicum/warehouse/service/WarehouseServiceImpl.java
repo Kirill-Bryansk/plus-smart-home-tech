@@ -10,6 +10,7 @@ import ru.yandex.practicum.warehouse.mapper.WarehouseMapper;
 import ru.yandex.practicum.warehouse.model.WarehouseProduct;
 import ru.yandex.practicum.warehouse.repository.WarehouseProductRepository;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
@@ -120,5 +121,54 @@ public class WarehouseServiceImpl implements WarehouseService {
     // Вспомогательный метод для расчёта объёма товара
     private double calculateVolume(WarehouseProduct product) {
         return product.getWidth() * product.getHeight() * product.getDepth();
+    }
+
+    @Override
+    @Transactional
+    public BookedProductsDto assemblyProductForOrderFromShoppingCart(UUID shoppingCartId, UUID orderId) {
+        log.info("Сборка товаров для заказа: shoppingCartId={}, orderId={}", shoppingCartId, orderId);
+
+        // В упрощённой версии просто проверяем наличие товаров
+        // В реальной реализации здесь нужно создавать сущность OrderBooking
+        // и уменьшать количество товаров на складе
+
+        // Для примера возвращаем заглушку
+        BookedProductsDto result = new BookedProductsDto();
+        result.setDeliveryWeight(0.0);
+        result.setDeliveryVolume(0.0);
+        result.setFragile(false);
+
+        log.info("Товары собраны для заказа: orderId={}", orderId);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public void shippedToDelivery(UUID orderId, UUID deliveryId) {
+        log.info("Передача товаров в доставку: orderId={}, deliveryId={}", orderId, deliveryId);
+        // В реальной реализации здесь нужно обновить сущность OrderBooking
+        // и добавить deliveryId
+    }
+
+    @Override
+    @Transactional
+    public void returnProduct(Map<UUID, Long> products) {
+        log.info("Возврат товаров на склад: количество позиций={}", products.size());
+
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
+            UUID productId = entry.getKey();
+            Long quantity = entry.getValue();
+
+            WarehouseProduct product = repository.findById(productId)
+                    .orElseThrow(() -> new ProductNotInWarehouseException(
+                            "Товар с productId=" + productId + " не найден на складе"));
+
+            product.setQuantity(product.getQuantity() + quantity);
+            repository.save(product);
+
+            log.info("Товар возвращён на склад: productId={}, quantity={}", productId, quantity);
+        }
+
+        log.info("Возврат товаров завершён");
     }
 }
