@@ -206,7 +206,7 @@ public class OrderService {
         Order order = getOrderById(orderId);
 
         // Вызвать payment service для расчёта
-        var response = paymentApi.getTotalCost(orderId);
+        var response = paymentApi.getTotalCost(orderMapper.toDto(order));
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             order.setTotalPrice(response.getBody());
             orderRepository.save(order);
