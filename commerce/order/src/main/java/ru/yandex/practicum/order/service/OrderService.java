@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.api.DeliveryApi;
 import ru.yandex.practicum.api.PaymentApi;
 import ru.yandex.practicum.api.WarehouseApi;
-import ru.yandex.practicum.model.dto.delivery.DeliveryDto;
 import ru.yandex.practicum.model.dto.order.CreateNewOrderRequest;
 import ru.yandex.practicum.model.dto.order.OrderDto;
 import ru.yandex.practicum.model.dto.order.ProductReturnRequest;
@@ -225,7 +224,7 @@ public class OrderService {
         Order order = getOrderById(orderId);
 
         // Вызвать delivery service для расчёта
-        var response = deliveryApi.deliveryCost(orderId);
+        var response = deliveryApi.deliveryCost(orderMapper.toDto(order));
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             order.setDeliveryPrice(response.getBody());
             orderRepository.save(order);
