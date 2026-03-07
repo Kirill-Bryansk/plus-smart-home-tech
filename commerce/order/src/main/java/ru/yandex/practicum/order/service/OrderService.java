@@ -57,25 +57,12 @@ public class OrderService {
     public OrderDto createNewOrder(CreateNewOrderRequest request) {
         log.info("Создание нового заказа для корзины: {}", request.getShoppingCart().getShoppingCartId());
 
-        // 1. Собрать товары на складе
-        BookedProductsDto bookedProducts = warehouseApi.assemblyProductForOrderFromShoppingCart(
-                request.getShoppingCart().getShoppingCartId(),
-                null // orderId будет создан ниже
-        ).getBody();
-
-        // 2. Создать заказ в БД
+        // 1. Сначала создаём заказ в БД (чтобы получить orderId)
         Order order = new Order();
         order.setShoppingCartId(request.getShoppingCart().getShoppingCartId());
         order.setState(OrderStatus.NEW);
-        
-        // 3. Установить параметры из забронированных товаров
-        if (bookedProducts != null) {
-            order.setDeliveryWeight(bookedProducts.getDeliveryWeight());
-            order.setDeliveryVolume(bookedProducts.getDeliveryVolume());
-            order.setFragile(bookedProducts.getFragile());
-        }
 
-        // 4. Добавить товары из корзины в заказ
+        // 2. Добавляем товары из корзины в заказ
         if (request.getShoppingCart().getProducts() != null) {
             for (Map.Entry<UUID, Long> entry : request.getShoppingCart().getProducts().entrySet()) {
                 OrderItem item = new OrderItem();
@@ -87,6 +74,20 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
         log.info("Заказ создан: {}", savedOrder.getOrderId());
+
+        // 3. Теперь собираем товары на складе (с реальным orderId)
+        BookedProductsDto bookedProducts = warehouseApi.assemblyProductForOrderFromShoppingCart(
+                request.getShoppingCart().getShoppingCartId(),
+                savedOrder.getOrderId()  // ✅ Передаём реальный orderId
+        ).getBody();
+
+        // 4. Устанавливаем параметры из забронированных товаров
+        if (bookedProducts != null) {
+            savedOrder.setDeliveryWeight(bookedProducts.getDeliveryWeight());
+            savedOrder.setDeliveryVolume(bookedProducts.getDeliveryVolume());
+            savedOrder.setFragile(bookedProducts.getFragile());
+            orderRepository.save(savedOrder);
+        }
 
         // 5. Рассчитать стоимость доставки
         calculateDeliveryCost(savedOrder.getOrderId());
