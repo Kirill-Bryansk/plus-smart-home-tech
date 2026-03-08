@@ -30,7 +30,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public ShoppingCartDto getShoppingCart(String username) {
         log.info("Получение корзины пользователя: {}", username);
-        
+
         ShoppingCart cart = repository.findByUsername(username)
                 .orElseGet(() -> {
                     log.info("Корзина не найдена, создаём новую для: {}", username);
@@ -41,7 +41,23 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         ShoppingCartDto dto = mapper.toDto(cart);
         dto.setProducts(convertToMap(cart.getProducts()));
-        
+
+        log.info("Корзина получена: cartId={}, товаров: {}", dto.getShoppingCartId(), dto.getProducts().size());
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ShoppingCartDto getShoppingCartById(UUID shoppingCartId) {
+        log.info("Получение корзины по идентификатору: {}", shoppingCartId);
+
+        ShoppingCart cart = repository.findById(shoppingCartId)
+                .orElseThrow(() -> new ShoppingCartNotFoundException(
+                        "Корзина с идентификатором " + shoppingCartId + " не найдена"));
+
+        ShoppingCartDto dto = mapper.toDto(cart);
+        dto.setProducts(convertToMap(cart.getProducts()));
+
         log.info("Корзина получена: cartId={}, товаров: {}", dto.getShoppingCartId(), dto.getProducts().size());
         return dto;
     }

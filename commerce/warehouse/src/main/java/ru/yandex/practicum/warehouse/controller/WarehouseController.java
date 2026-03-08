@@ -15,72 +15,94 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/warehouse")
 public class WarehouseController implements WarehouseApi {
 
     private final WarehouseService warehouseService;
 
+    /**
+     * Добавить новый товар на склад.
+     */
     @Override
-    @PutMapping("/api/v1/warehouse")
+    @PutMapping
     public ResponseEntity<Void> addNewProductInWarehouse(
             @Valid @RequestBody NewProductInWarehouseRequest product) {
-        log.info("PUT /api/v1/warehouse - получен запрос на добавление нового товара productId={}", product.getProductId());
+        log.info("PUT - добавление нового товара productId={}", product.getProductId());
         warehouseService.addNewProductInWarehouse(product);
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Проверить наличие товаров на складе и зарезервировать их.
+     */
     @Override
-    @PostMapping("/api/v1/warehouse/check")
+    @PostMapping("/check")
     public ResponseEntity<BookedProductsDto> checkProductQuantityInWarehouse(
             @RequestBody ShoppingCartDto shoppingCart) {
-        log.info("POST /api/v1/warehouse/check - проверка наличия товаров для корзины cartId={}", shoppingCart.getShoppingCartId());
+        log.info("POST /check - проверка наличия товаров для корзины cartId={}", shoppingCart.getShoppingCartId());
         BookedProductsDto result = warehouseService.checkProductQuantityInWarehouse(shoppingCart);
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * Добавить количество существующего товара на складе.
+     */
     @Override
-    @PostMapping("/api/v1/warehouse/add")
+    @PostMapping("/add")
     public ResponseEntity<Void> addProductToWarehouse(
             @Valid @RequestBody AddProductToWarehouseRequest request) {
-        log.info("POST /api/v1/warehouse/add - добавление товара на склад productId={}", request.getProductId());
+        log.info("POST /add - добавление товара на склад productId={}", request.getProductId());
         warehouseService.addProductToWarehouse(request);
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Получить адрес склада.
+     */
     @Override
-    @GetMapping("/api/v1/warehouse/address")
+    @GetMapping("/address")
     public ResponseEntity<AddressDto> getWarehouseAddress() {
-        log.info("GET /api/v1/warehouse/address - запрос адреса склада");
+        log.info("GET /address - запрос адреса склада");
         AddressDto address = warehouseService.getWarehouseAddress();
         return ResponseEntity.ok(address);
     }
 
+    /**
+     * Собрать товары из корзины в заказ.
+     */
     @Override
-    @PostMapping("/api/v1/warehouse/assembly")
+    @PostMapping("/assembly")
     public ResponseEntity<BookedProductsDto> assemblyProductForOrderFromShoppingCart(
             @RequestParam UUID shoppingCartId,
             @RequestParam UUID orderId) {
-        log.info("POST /api/v1/warehouse/assembly - сборка товаров для заказа: shoppingCartId={}, orderId={}", 
-            shoppingCartId, orderId);
+        log.info("POST /assembly - сборка товаров для заказа: cartId={}, orderId={}",
+                shoppingCartId, orderId);
         BookedProductsDto result = warehouseService.assemblyProductForOrderFromShoppingCart(shoppingCartId, orderId);
         return ResponseEntity.ok(result);
     }
 
+    /**
+     * Подтвердить передачу заказа в доставку.
+     */
     @Override
-    @PostMapping("/api/v1/warehouse/shipped")
+    @PostMapping("/shipped")
     public ResponseEntity<Void> shippedToDelivery(
             @RequestParam UUID orderId,
             @RequestParam UUID deliveryId) {
-        log.info("POST /api/v1/warehouse/shipped - передача в доставку: orderId={}, deliveryId={}", 
-            orderId, deliveryId);
+        log.info("POST /shipped - передача в доставку: orderId={}, deliveryId={}",
+                orderId, deliveryId);
         warehouseService.shippedToDelivery(orderId, deliveryId);
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Принять возврат товаров на склад.
+     */
     @Override
-    @PostMapping("/api/v1/warehouse/return")
+    @PostMapping("/return")
     public ResponseEntity<Void> returnProduct(
             @RequestBody Map<UUID, Long> products) {
-        log.info("POST /api/v1/warehouse/return - возврат товаров на склад: количество={}", products.size());
+        log.info("POST /return - возврат товаров на склад: {} позиций", products.size());
         warehouseService.returnProduct(products);
         return ResponseEntity.ok().build();
     }

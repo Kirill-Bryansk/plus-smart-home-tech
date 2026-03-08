@@ -32,6 +32,16 @@ public class ShoppingCartController {
     }
 
     /**
+     * Получить корзину по идентификатору.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ShoppingCartDto> getShoppingCartById(@PathVariable UUID id) {
+        log.info("GET /api/v1/shopping-cart/{} - получение корзины по идентификатору", id);
+        ShoppingCartDto cart = shoppingCartService.getShoppingCartById(id);
+        return ResponseEntity.ok(cart);
+    }
+
+    /**
      * Добавить товар в корзину.
      */
     @PutMapping

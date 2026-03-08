@@ -472,6 +472,7 @@ public interface WarehouseClient {
 | Метод | Эндпоинт | Описание |
 |-------|----------|----------|
 | GET | `/api/v1/shopping-cart?username={username}` | Получить корзину пользователя |
+| GET | `/api/v1/shopping-cart/{id}` | Получить корзину по идентификатору |
 | PUT | `/api/v1/shopping-cart?username={username}` | Добавить товары в корзину |
 | DELETE | `/api/v1/shopping-cart?username={username}` | Деактивировать корзину |
 | POST | `/api/v1/shopping-cart/remove?username={username}` | Удалить товары из корзины |
