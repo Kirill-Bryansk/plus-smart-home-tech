@@ -51,40 +51,51 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public ShoppingCartDto addProductToCart(String username, Map<UUID, Long> products) {
         log.info("Добавление товаров в корзину пользователя: {}, товары: {}", username, products);
-        
+
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Имя пользователя не должно быть пустым");
         }
 
         ShoppingCart cart = repository.findByUsername(username)
                 .orElseGet(() -> {
+                    log.info("Корзина не найдена, создаем новую для пользователя: {}", username);
                     ShoppingCart newCart = new ShoppingCart();
                     newCart.setUsername(username);
                     return repository.save(newCart);
                 });
+        log.info("Корзина найдена/создана: cartId={}", cart.getShoppingCartId());
 
         // Проверяем наличие на складе через Circuit Breaker
         ShoppingCartDto cartDto = mapper.toDto(cart);
         cartDto.setProducts(convertToMap(cart.getProducts()));
         cartDto.setShoppingCartId(cart.getShoppingCartId());
-        
-        // Вызов warehouse через Circuit Breaker
-        BookedProductsDto booked = warehouseClient.checkProductQuantityInWarehouse(cartDto).getBody();
-        log.info("Проверка на складе пройдена: weight={}, volume={}, fragile={}", 
-                booked.getDeliveryWeight(), booked.getDeliveryVolume(), booked.getFragile());
-        
+
+        try {
+            // Вызов warehouse через Circuit Breaker
+            log.info("Вызов warehouse для проверки товаров: {}", products);
+            BookedProductsDto booked = warehouseClient.checkProductQuantityInWarehouse(cartDto).getBody();
+            log.info("Проверка на складе пройдена: weight={}, volume={}, fragile={}",
+                    booked.getDeliveryWeight(), booked.getDeliveryVolume(), booked.getFragile());
+            log.info("Ответ от warehouse получен");
+        } catch (Exception e) {
+            log.error("Ошибка при проверке склада: {}", e.getMessage());
+            throw e; // или обработать через fallback
+        }
+
         // Добавляем новые товары
         for (Map.Entry<UUID, Long> entry : products.entrySet()) {
             UUID productId = entry.getKey();
             Long quantity = entry.getValue();
-            
+            log.debug("Обработка товара: productId={}, quantity={}", productId, quantity);
+
             CartProduct existingProduct = cart.getProducts().stream()
                     .filter(p -> p.getProductId().equals(productId))
                     .findFirst()
                     .orElse(null);
-            
+
             if (existingProduct != null) {
                 existingProduct.setQuantity(existingProduct.getQuantity() + quantity);
+                log.debug("Обновлено количество существующего товара: новое количество={}", existingProduct.getQuantity());
             } else {
                 CartProduct newProduct = new CartProduct();
                 newProduct.setShoppingCartId(cart.getShoppingCartId());
@@ -92,12 +103,14 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                 newProduct.setQuantity(quantity);
                 newProduct.setShoppingCart(cart);
                 cart.getProducts().add(newProduct);
+                log.debug("Добавлен новый товар в корзину");
             }
         }
 
         repository.save(cart);
-        log.info("Товары добавлены в корзину: cartId={}", cart.getShoppingCartId());
-        
+        log.info("Товары добавлены в корзину: cartId={}, всего товаров={}",
+                cart.getShoppingCartId(), cart.getProducts().size());
+
         ShoppingCartDto result = mapper.toDto(cart);
         result.setProducts(convertToMap(cart.getProducts()));
         return result;

@@ -1,16 +1,27 @@
 server:
-  port: 8761
+  port: 8761  # Порт, на котором будет запущен Eureka сервер
 
 eureka:
   instance:
+    # Уникальный идентификатор экземпляра: имя приложения + случайное значение
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Использовать IP-адрес вместо hostname для регистрации
     prefer-ip-address: true
+
   client:
-    healthcheck:
-      enabled: true
+    # Eureka сервер НЕ регистрируется сам в себе (т.к. он - сервер, а не клиент)
+    register-with-eureka: false
+    # Eureka сервер НЕ скачивает реестр с самого себя
+    fetch-registry: false
+    # URL для связи с Eureka (не используется из-за двух false выше)
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
 
+  server:
+    # Отключаем режим самосохранения (удобно для разработки)
+    # В продакшене лучше включить (true)
+    enable-self-preservation: false
+
 spring:
   application:
-    name: discovery-server
+    name: discovery-server  # Имя приложения в реестре Eureka
