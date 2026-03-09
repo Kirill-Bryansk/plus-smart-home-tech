@@ -14,6 +14,7 @@ import ru.yandex.practicum.model.dto.delivery.DeliveryDto;
 import ru.yandex.practicum.model.dto.order.OrderDto;
 import ru.yandex.practicum.model.dto.warehouse.AddressDto;
 import ru.yandex.practicum.model.enums.DeliveryStatus;
+import ru.yandex.practicum.util.MathUtils;
 
 import java.util.UUID;
 
@@ -106,7 +107,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         // В упрощённой версии считаем, что не совпадает
         cost = cost + (cost * 0.2); // 23 + 4.6 = 27.6
 
-        return cost;
+        return MathUtils.round(cost);
     }
 
     @Override

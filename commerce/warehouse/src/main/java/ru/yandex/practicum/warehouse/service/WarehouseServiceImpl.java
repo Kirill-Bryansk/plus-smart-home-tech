@@ -12,6 +12,7 @@ import ru.yandex.practicum.warehouse.model.OrderBooking;
 import ru.yandex.practicum.warehouse.model.WarehouseProduct;
 import ru.yandex.practicum.warehouse.repository.OrderBookingRepository;
 import ru.yandex.practicum.warehouse.repository.WarehouseProductRepository;
+import ru.yandex.practicum.util.MathUtils;
 
 import java.util.Map;
 import java.util.Random;
@@ -82,11 +83,11 @@ public class WarehouseServiceImpl implements WarehouseService {
         }
 
         BookedProductsDto result = new BookedProductsDto();
-        result.setDeliveryWeight(totalWeight);
-        result.setDeliveryVolume(totalVolume);
+        result.setDeliveryWeight(MathUtils.round(totalWeight));
+        result.setDeliveryVolume(MathUtils.round(totalVolume));
         result.setFragile(hasFragile);
 
-        log.info("Проверка завершена: weight={}, volume={}, fragile={}", 
+        log.info("Проверка завершена: weight={}, volume={}, fragile={}",
                 totalWeight, totalVolume, hasFragile);
         return result;
     }
@@ -190,13 +191,13 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         // 6. Возвращаем результат
         BookedProductsDto result = new BookedProductsDto();
-        result.setDeliveryWeight(totalWeight);
-        result.setDeliveryVolume(totalVolume);
+        result.setDeliveryWeight(MathUtils.round(totalWeight));
+        result.setDeliveryVolume(MathUtils.round(totalVolume));
         result.setFragile(hasFragile);
 
-        log.info("Товары собраны для заказа: orderId={}, weight={}, volume={}, fragile={}", 
+        log.info("Товары собраны для заказа: orderId={}, weight={}, volume={}, fragile={}",
             orderId, totalWeight, totalVolume, hasFragile);
-        
+
         return result;
     }
 

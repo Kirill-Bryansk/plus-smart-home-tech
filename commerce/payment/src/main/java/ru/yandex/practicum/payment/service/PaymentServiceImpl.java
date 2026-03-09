@@ -14,6 +14,7 @@ import ru.yandex.practicum.payment.exception.NoPaymentFoundException;
 import ru.yandex.practicum.payment.mapper.PaymentMapper;
 import ru.yandex.practicum.payment.model.Payment;
 import ru.yandex.practicum.payment.repository.PaymentRepository;
+import ru.yandex.practicum.util.MathUtils;
 
 import java.util.Map;
 import java.util.UUID;
@@ -53,7 +54,7 @@ public class PaymentServiceImpl implements PaymentService {
                 if (product != null && product.getPrice() != null) {
                     double price = product.getPrice().doubleValue();
                     totalProductCost += price * quantity;
-                    log.debug("Товар {}: цена={}, количество={}, сумма={}", 
+                    log.debug("Товар {}: цена={}, количество={}, сумма={}",
                         productId, price, quantity, price * quantity);
                 }
             } catch (Exception e) {
@@ -62,7 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         log.info("Общая стоимость товаров для заказа {}: {}", orderDto.getOrderId(), totalProductCost);
-        return totalProductCost;
+        return MathUtils.round(totalProductCost);
     }
 
     @Override
@@ -82,10 +83,10 @@ public class PaymentServiceImpl implements PaymentService {
         // 4. Общая стоимость = товары + НДС + доставка
         Double totalCost = productCost + vat + deliveryCost;
 
-        log.info("Общая стоимость заказа {}: товары={}, НДС={}, доставка={}, итого={}", 
+        log.info("Общая стоимость заказа {}: товары={}, НДС={}, доставка={}, итого={}",
             orderDto.getOrderId(), productCost, vat, deliveryCost, totalCost);
 
-        return totalCost;
+        return MathUtils.round(totalCost);
     }
 
     @Override
