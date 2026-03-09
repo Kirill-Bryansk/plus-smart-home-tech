@@ -48,7 +48,7 @@ mvn spring-boot:run
 
 **Порт:** `http://localhost:8761`
 
-**Важно:** 
+**Важно:**
 - Оставьте терминал открытым
 - Дождитесь: `Started DiscoveryServer in X.XXX seconds`
 
@@ -534,6 +534,8 @@ public interface WarehouseClient {
 | POST | `/api/v1/payment` | Сформировать оплату |
 | POST | `/api/v1/payment/refund` | Успешная оплата (из шлюза) |
 | POST | `/api/v1/payment/failed` | Ошибка оплаты (из шлюза) |
+
+> **Примечание:** Все финансовые значения округляются до 2 знаков после запятой (`RoundingMode.HALF_UP`).
 
 ---
 

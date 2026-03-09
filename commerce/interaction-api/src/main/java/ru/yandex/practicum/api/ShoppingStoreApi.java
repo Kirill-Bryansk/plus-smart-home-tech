@@ -18,6 +18,6 @@ public interface ShoppingStoreApi {
     /**
      * Получить товар по идентификатору.
      */
-    @GetMapping("/api/v1/shopping-store/products/{id}")
+    @GetMapping("/api/v1/shopping-store/{id}")
     ResponseEntity<ProductDto> getProduct(@PathVariable UUID id);
 }
