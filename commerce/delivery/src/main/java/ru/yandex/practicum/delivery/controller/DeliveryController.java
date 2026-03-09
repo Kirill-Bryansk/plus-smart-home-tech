@@ -16,6 +16,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
+@RequestMapping("/api/v1/delivery")
 @RequiredArgsConstructor
 public class DeliveryController implements DeliveryApi {
 
@@ -25,9 +26,9 @@ public class DeliveryController implements DeliveryApi {
      * Создать новую доставку в БД.
      */
     @Override
-    @PutMapping("/api/v1/delivery")
+    @PutMapping
     public ResponseEntity<DeliveryDto> planDelivery(@RequestBody DeliveryDto deliveryDto) {
-        log.info("PUT /api/v1/delivery - создание доставки для заказа: {}", deliveryDto.getOrderId());
+        log.info("PUT / - создание доставки для заказа: {}", deliveryDto.getOrderId());
         DeliveryDto result = deliveryService.planDelivery(deliveryDto);
         return ResponseEntity.ok(result);
     }
@@ -36,9 +37,9 @@ public class DeliveryController implements DeliveryApi {
      * Рассчитать стоимость доставки.
      */
     @Override
-    @PostMapping("/api/v1/delivery/cost")
+    @PostMapping("/cost")
     public ResponseEntity<Double> deliveryCost(@RequestBody OrderDto orderDto) {
-        log.info("POST /api/v1/delivery/cost - расчёт стоимости для заказа: {}", orderDto.getOrderId());
+        log.info("POST /cost - расчёт стоимости для заказа: {}", orderDto.getOrderId());
         Double cost = deliveryService.deliveryCost(orderDto);
         return ResponseEntity.ok(cost);
     }
@@ -47,9 +48,9 @@ public class DeliveryController implements DeliveryApi {
      * Принять товары в доставку (изменить статус на IN_PROGRESS).
      */
     @Override
-    @PostMapping("/api/v1/delivery/in-progress")
+    @PostMapping("/in-progress")
     public ResponseEntity<DeliveryDto> acceptToDelivery(@RequestBody UUID orderId) {
-        log.info("POST /api/v1/delivery/in-progress - принятие товаров в доставку для заказа: {}", orderId);
+        log.info("POST /in-progress - принятие товаров в доставку для заказа: {}", orderId);
         DeliveryDto result = deliveryService.acceptToDelivery(orderId);
         return ResponseEntity.ok(result);
     }
@@ -58,9 +59,9 @@ public class DeliveryController implements DeliveryApi {
      * Успешная доставка.
      */
     @Override
-    @PostMapping("/api/v1/delivery/success")
+    @PostMapping("/success")
     public ResponseEntity<DeliveryDto> deliverySuccess(@RequestBody UUID orderId) {
-        log.info("POST /api/v1/delivery/success - успешная доставка для заказа: {}", orderId);
+        log.info("POST /success - успешная доставка для заказа: {}", orderId);
         DeliveryDto result = deliveryService.deliverySuccess(orderId);
         return ResponseEntity.ok(result);
     }
@@ -69,9 +70,9 @@ public class DeliveryController implements DeliveryApi {
      * Ошибка доставки.
      */
     @Override
-    @PostMapping("/api/v1/delivery/failed")
+    @PostMapping("/failed")
     public ResponseEntity<DeliveryDto> deliveryFailed(@RequestBody UUID orderId) {
-        log.info("POST /api/v1/delivery/failed - ошибка доставки для заказа: {}", orderId);
+        log.info("POST /failed - ошибка доставки для заказа: {}", orderId);
         DeliveryDto result = deliveryService.deliveryFailed(orderId);
         return ResponseEntity.ok(result);
     }

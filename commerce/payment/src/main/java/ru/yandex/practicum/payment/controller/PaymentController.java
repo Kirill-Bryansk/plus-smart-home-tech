@@ -16,6 +16,7 @@ import java.util.UUID;
  */
 @Slf4j
 @RestController
+@RequestMapping("/api/v1/payment")
 @RequiredArgsConstructor
 public class PaymentController implements PaymentApi {
 
@@ -25,9 +26,9 @@ public class PaymentController implements PaymentApi {
      * Рассчитать стоимость товаров в заказе.
      */
     @Override
-    @PostMapping("/api/v1/payment/productCost")
+    @PostMapping("/productCost")
     public ResponseEntity<Double> productCost(@RequestBody OrderDto orderDto) {
-        log.info("POST /api/v1/payment/productCost - расчёт стоимости товаров для заказа: {}", orderDto.getOrderId());
+        log.info("POST /productCost - расчёт стоимости товаров для заказа: {}", orderDto.getOrderId());
         Double cost = paymentService.productCost(orderDto);
         return ResponseEntity.ok(cost);
     }
@@ -36,9 +37,9 @@ public class PaymentController implements PaymentApi {
      * Рассчитать общую стоимость заказа.
      */
     @Override
-    @PostMapping("/api/v1/payment/totalCost")
+    @PostMapping("/totalCost")
     public ResponseEntity<Double> getTotalCost(@RequestBody OrderDto orderDto) {
-        log.info("POST /api/v1/payment/totalCost - расчёт общей стоимости для заказа: {}", orderDto.getOrderId());
+        log.info("POST /totalCost - расчёт общей стоимости для заказа: {}", orderDto.getOrderId());
         Double totalCost = paymentService.getTotalCost(orderDto);
         return ResponseEntity.ok(totalCost);
     }
@@ -47,9 +48,9 @@ public class PaymentController implements PaymentApi {
      * Сформировать оплату для заказа.
      */
     @Override
-    @PostMapping("/api/v1/payment")
+    @PostMapping
     public ResponseEntity<PaymentDto> payment(@RequestBody OrderDto orderDto) {
-        log.info("POST /api/v1/payment - формирование оплаты для заказа: {}", orderDto.getOrderId());
+        log.info("POST / - формирование оплаты для заказа: {}", orderDto.getOrderId());
         PaymentDto result = paymentService.payment(orderDto);
         return ResponseEntity.ok(result);
     }
@@ -58,9 +59,9 @@ public class PaymentController implements PaymentApi {
      * Успешная оплата (вызов из платёжного шлюза).
      */
     @Override
-    @PostMapping("/api/v1/payment/refund")
+    @PostMapping("/refund")
     public ResponseEntity<PaymentDto> paymentSuccess(@RequestBody UUID paymentId) {
-        log.info("POST /api/v1/payment/refund - успешная оплата: {}", paymentId);
+        log.info("POST /refund - успешная оплата: {}", paymentId);
         PaymentDto result = paymentService.paymentSuccess(paymentId);
         return ResponseEntity.ok(result);
     }
@@ -69,9 +70,9 @@ public class PaymentController implements PaymentApi {
      * Ошибка оплаты (вызов из платёжного шлюза).
      */
     @Override
-    @PostMapping("/api/v1/payment/failed")
+    @PostMapping("/failed")
     public ResponseEntity<PaymentDto> paymentFailed(@RequestBody UUID paymentId) {
-        log.info("POST /api/v1/payment/failed - ошибка оплаты: {}", paymentId);
+        log.info("POST /failed - ошибка оплаты: {}", paymentId);
         PaymentDto result = paymentService.paymentFailed(paymentId);
         return ResponseEntity.ok(result);
     }
