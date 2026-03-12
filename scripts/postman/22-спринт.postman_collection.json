@@ -1,0 +1,4713 @@
+{
+  "info": {
+    "_postman_id": "50a4d091-b5bf-43f6-abae-3a8d0c44d8fa",
+    "name": "22 спринт",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47078576",
+    "_collection_link": "https://go.postman.co/collection/47078576-50a4d091-b5bf-43f6-abae-3a8d0c44d8fa?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "ShoppingStore",
+      "item": [
+        {
+          "name": "Создание нового товара в каталоге",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация случайных данных\r",
+                  "const productNames = [\"Умная лампа\", \"Датчик движения\", \"Розетка Wi-Fi\"];\r",
+                  "const descriptions = [\"Высокое качество\", \"Простая установка\"];\r",
+                  "const categories = [\"LIGHTING\", \"CONTROL\", \"SENSORS\"];\r",
+                  "const quantityStates = [\"ENDED\", \"FEW\", \"ENOUGH\", \"MANY\"];\r",
+                  "const productStates = [\"ACTIVE\", \"DEACTIVATE\"];\r",
+                  "\r",
+                  "const randomProduct = {\r",
+                  "    productName: productNames[Math.floor(Math.random() * productNames.length)] + \" \" + Date.now(),\r",
+                  "    description: descriptions[Math.floor(Math.random() * descriptions.length)],\r",
+                  "    imageSrc: \"images/test.jpg\",\r",
+                  "    quantityState: quantityStates[Math.floor(Math.random() * quantityStates.length)],\r",
+                  "    productState: productStates[Math.floor(Math.random() * productStates.length)],\r",
+                  "    productCategory: categories[Math.floor(Math.random() * categories.length)],\r",
+                  "    price: Number((Math.random() * 1000).toFixed(2))\r",
+                  "};\r",
+                  "\r",
+                  "// Сохраняем для тестов\r",
+                  "pm.variables.set(\"expectedProduct\", JSON.stringify(randomProduct));\r",
+                  "\r",
+                  "// ПРАВИЛЬНЫЙ способ установить тело запроса\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify(randomProduct),\r",
+                  "    options: { raw: { language: 'json' } }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Status 200 or 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка полей\r",
+                  "pm.test(\"Check product fields\", function() {\r",
+                  "    const expected = JSON.parse(pm.variables.get(\"expectedProduct\"));\r",
+                  "    const actual = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(actual).to.have.property(\"productId\");\r",
+                  "    pm.expect(actual.productName).to.equal(expected.productName);\r",
+                  "    pm.expect(actual.price).to.equal(expected.price);\r",
+                  "    pm.expect(actual.productCategory).to.equal(expected.productCategory);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем ID в КОЛЛЕКЦИЮ\r",
+                  "pm.test(\"Сохраняем productId в коллекцию\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    if (response.productId) {\r",
+                  "        pm.collectionVariables.set(\"productId\", response.productId);\r",
+                  "        console.log(\"Сохранен productId:\", response.productId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение товара по ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Проверяем наличие ID перед запросом\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала выполните PUT запрос\");\r",
+                  "    postman.setNextRequest(null); // Останавливаем выполнение\r",
+                  "} else {\r",
+                  "    console.log(\"Запрашиваем товар с ID:\", productId);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса ответа\r",
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка структуры ответа\r",
+                  "pm.test(\"Товар содержит все необходимые поля\", function() {\r",
+                  "    const product = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(product).to.have.property(\"productId\");\r",
+                  "    pm.expect(product).to.have.property(\"productName\");\r",
+                  "    pm.expect(product).to.have.property(\"description\");\r",
+                  "    pm.expect(product).to.have.property(\"imageSrc\");\r",
+                  "    pm.expect(product).to.have.property(\"quantityState\");\r",
+                  "    pm.expect(product).to.have.property(\"productState\");\r",
+                  "    pm.expect(product).to.have.property(\"productCategory\");\r",
+                  "    pm.expect(product).to.have.property(\"price\");\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка соответствия ID\r",
+                  "pm.test(\"ID товара совпадает с запрошенным\", function() {\r",
+                  "    const product = pm.response.json();\r",
+                  "    const expectedId = pm.collectionVariables.get(\"productId\");\r",
+                  "    \r",
+                  "    pm.expect(product.productId).to.equal(expectedId);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка формата цены\r",
+                  "pm.test(\"Цена является числом\", function() {\r",
+                  "    const product = pm.response.json();\r",
+                  "    pm.expect(product.price).to.be.a('number');\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка допустимых значений статусов\r",
+                  "pm.test(\"Статус количества имеет допустимое значение\", function() {\r",
+                  "    const product = pm.response.json();\r",
+                  "    pm.expect(product.quantityState).to.be.oneOf([\"ENDED\", \"FEW\", \"ENOUGH\", \"MANY\"]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Статус товара имеет допустимое значение\", function() {\r",
+                  "    const product = pm.response.json();\r",
+                  "    pm.expect(product.productState).to.be.oneOf([\"ACTIVE\", \"DEACTIVATE\"]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Категория товара имеет допустимое значение\", function() {\r",
+                  "    const product = pm.response.json();\r",
+                  "    pm.expect(product.productCategory).to.be.oneOf([\"LIGHTING\", \"CONTROL\", \"SENSORS\"]);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение списка товаров по категории",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Случайная категория для теста\r",
+                  "const categories = [\"LIGHTING\", \"CONTROL\", \"SENSORS\"];\r",
+                  "const randomCategory = categories[Math.floor(Math.random() * categories.length)];\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"category\", randomCategory);\r",
+                  "console.log(\"Тестируем категорию:\", randomCategory);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка структуры ответа с пагинацией\r",
+                  "pm.test(\"Ответ содержит корректную структуру пагинации\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"content\").that.is.an(\"array\");\r",
+                  "    pm.expect(response).to.have.property(\"totalElements\").that.is.a(\"number\");\r",
+                  "    pm.expect(response).to.have.property(\"totalPages\").that.is.a(\"number\");\r",
+                  "    pm.expect(response).to.have.property(\"size\").that.is.a(\"number\");\r",
+                  "    pm.expect(response).to.have.property(\"number\").that.is.a(\"number\");\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка товаров в content\r",
+                  "pm.test(\"Каждый товар содержит все необходимые поля\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    response.content.forEach(product => {\r",
+                  "        pm.expect(product).to.have.property(\"productId\");\r",
+                  "        pm.expect(product).to.have.property(\"productName\");\r",
+                  "        pm.expect(product).to.have.property(\"description\");\r",
+                  "        pm.expect(product).to.have.property(\"imageSrc\");\r",
+                  "        pm.expect(product).to.have.property(\"quantityState\");\r",
+                  "        pm.expect(product).to.have.property(\"productState\");\r",
+                  "        pm.expect(product).to.have.property(\"productCategory\");\r",
+                  "        pm.expect(product).to.have.property(\"price\");\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка соответствия категории\r",
+                  "pm.test(\"Все товары соответствуют запрошенной категории\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    const requestedCategory = pm.collectionVariables.get(\"category\");\r",
+                  "    \r",
+                  "    response.content.forEach(product => {\r",
+                  "        pm.expect(product.productCategory).to.equal(requestedCategory);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка размера страницы\r",
+                  "pm.test(\"Количество товаров не превышает размер страницы\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.content.length).to.be.at.most(10);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store?category={{category}}&page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "{{category}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Обновление существующего товара.",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Получаем ID существующего товара\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Данные для обновления\r",
+                  "    const updatedProduct = {\r",
+                  "        productId: productId,\r",
+                  "        productName: \"Обновленный товар \" + Date.now(),\r",
+                  "        description: \"Новое описание\",\r",
+                  "        imageSrc: \"images/updated.jpg\",\r",
+                  "        quantityState: \"MANY\",\r",
+                  "        productState: \"ACTIVE\",\r",
+                  "        productCategory: \"LIGHTING\",\r",
+                  "        price: 999.99\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"updatedProduct\", JSON.stringify(updatedProduct));\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(updatedProduct),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка обновленных полей\r",
+                  "pm.test(\"Товар успешно обновлен\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"updatedProduct\"));\r",
+                  "    const actual = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(actual.productId).to.equal(expected.productId);\r",
+                  "    pm.expect(actual.productName).to.equal(expected.productName);\r",
+                  "    pm.expect(actual.description).to.equal(expected.description);\r",
+                  "    pm.expect(actual.price).to.equal(expected.price);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что ID не изменился\r",
+                  "pm.test(\"ID товара остался прежним\", function() {\r",
+                  "    const actual = pm.response.json();\r",
+                  "    const originalId = pm.collectionVariables.get(\"productId\");\r",
+                  "    \r",
+                  "    pm.expect(actual.productId).to.equal(originalId);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Удаление товара из ассортимента (перевод в статус DEACTIVATE)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(productId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Товар помечен как DEACTIVATE\", function() {\r",
+                  "    // Проверим через GET запрос\r",
+                  "    const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "    \r",
+                  "    pm.sendRequest({\r",
+                  "        url: pm.collectionVariables.get(\"baseUrl\") + \"/api/v1/shopping-store/\" + productId,\r",
+                  "        method: 'GET'\r",
+                  "    }, function(err, res) {\r",
+                  "        pm.test(\"Статус товара изменился на DEACTIVATE\", function() {\r",
+                  "            pm.expect(res.json().productState).to.equal(\"DEACTIVATE\");\r",
+                  "        });\r",
+                  "    });\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store/removeProductFromStore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store",
+                "removeProductFromStore"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Изменяет статус количества товара (ENDED, FEW, ENOUGH, MANY)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "const quantityStates = [\"ENDED\", \"FEW\", \"ENOUGH\", \"MANY\"];\r",
+                  "const randomState = quantityStates[Math.floor(Math.random() * quantityStates.length)];\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    pm.collectionVariables.set(\"quantityState\", randomState);\r",
+                  "    console.log(\"Устанавливаем статус:\", randomState);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что статус изменился\r",
+                  "pm.test(\"Проверка изменения quantityState\", function() {\r",
+                  "    const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "    const expectedState = pm.collectionVariables.get(\"quantityState\");\r",
+                  "    \r",
+                  "    pm.sendRequest({\r",
+                  "        url: pm.collectionVariables.get(\"baseUrl\") + \"/api/v1/shopping-store/\" + productId,\r",
+                  "        method: 'GET'\r",
+                  "    }, function(err, res) {\r",
+                  "        pm.test(\"Новый статус количества: \" + expectedState, function() {\r",
+                  "            pm.expect(res.json().quantityState).to.equal(expectedState);\r",
+                  "        });\r",
+                  "    });\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store/quantityState?productId={{productId}}&quantityState={{quantityState}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store",
+                "quantityState"
+              ],
+              "query": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                },
+                {
+                  "key": "quantityState",
+                  "value": "{{quantityState}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение всех товаров с пагинацией и сортировкой.",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерируем случайную категорию\r",
+                  "const categories = [\"LIGHTING\", \"CONTROL\", \"SENSORS\"];\r",
+                  "const randomCategory = categories[Math.floor(Math.random() * categories.length)];\r",
+                  "\r",
+                  "// Сохраняем В ТУ ЖЕ переменную, что и в URL\r",
+                  "pm.collectionVariables.set(\"category\", randomCategory);\r",
+                  "console.log(\"Тестируем категорию:\", randomCategory);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка структуры пагинации\r",
+                  "pm.test(\"Ответ содержит корректную структуру пагинации\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"content\").that.is.an(\"array\");\r",
+                  "    pm.expect(response).to.have.property(\"totalElements\");\r",
+                  "    pm.expect(response).to.have.property(\"totalPages\");\r",
+                  "    pm.expect(response).to.have.property(\"size\");\r",
+                  "    pm.expect(response).to.have.property(\"number\");\r",
+                  "    pm.expect(response).to.have.property(\"sort\").that.is.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка сортировки\r",
+                  "pm.test(\"Сортировка применена правильно\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    if (response.sort && response.sort.length > 0) {\r",
+                  "        pm.expect(response.sort[0].property).to.equal(\"productName\");\r",
+                  "        pm.expect(response.sort[0].direction).to.equal(\"DESC\");\r",
+                  "    }\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что размер страницы соответствует запросу\r",
+                  "pm.test(\"Размер страницы = 10\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.size).to.equal(10);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка полей товаров\r",
+                  "pm.test(\"Все товары содержат необходимые поля\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    response.content.forEach(product => {\r",
+                  "        pm.expect(product).to.have.property(\"productId\");\r",
+                  "        pm.expect(product).to.have.property(\"productName\");\r",
+                  "        pm.expect(product).to.have.property(\"price\");\r",
+                  "        pm.expect(product).to.have.property(\"productCategory\");\r",
+                  "    });\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store?category=CONTROL&page=0&size=10&sort=productName,DESC",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "CONTROL"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "productName,DESC"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "ShoppingCart",
+      "item": [
+        {
+          "name": "Добавление товара в карзину",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация тестового username\r",
+                  "const usernames = [\"alex_ivanov\", \"maria_petrova\", \"ivan_smirnov\", \"olga_sokolova\"];\r",
+                  "const randomUser = usernames[Math.floor(Math.random() * usernames.length)] + Date.now();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"username\", randomUser);\r",
+                  "console.log(\"Тестируем пользователя:\", randomUser);\r",
+                  "\r",
+                  "// Данные для корзины (нужен существующий productId)\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const cartItems = {};\r",
+                  "    cartItems[productId] = Math.floor(Math.random() * 5) + 1; // 1-5 шт\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"cartItems\", JSON.stringify(cartItems));\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(cartItems),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 или 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит добавленные товары\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"cartItems\"));\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    Object.keys(expected).forEach(productId => {\r",
+                  "        pm.expect(actual[productId]).to.equal(expected[productId]);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина привязана к правильному пользователю\", function() {\r",
+                  "    const username = pm.collectionVariables.get(\"username\");\r",
+                  "    pm.expect(pm.response.json().username).to.equal(username);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем shoppingCartId\r",
+                  "pm.test(\"Сохраняем shoppingCartId\", function() {\r",
+                  "    const cartId = pm.response.json().shoppingCartId;\r",
+                  "    if (cartId) {\r",
+                  "        pm.collectionVariables.set(\"shoppingCartId\", cartId);\r",
+                  "        console.log(\"Сохранен shoppingCartId:\", cartId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение корзины пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "if (!username) {\r",
+                  "    console.log(\"Ошибка: нет username. Сначала выполните PUT запрос\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Получаем корзину пользователя:\", username);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит правильный shoppingCartId\", function() {\r",
+                  "    const expectedCartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "    const actual = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(actual.shoppingCartId).to.equal(expectedCartId);\r",
+                  "    console.log(\"ID совпадает:\", actual.shoppingCartId);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит товары\", function() {\r",
+                  "    const cart = pm.response.json();\r",
+                  "    pm.expect(cart).to.have.property(\"products\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество товаров совпадает\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"cartItems\"));\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    Object.keys(expected).forEach(productId => {\r",
+                  "        pm.expect(actual[productId]).to.equal(expected[productId]);\r",
+                  "    });\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Изменение количества конкретного товара в корзине.",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!username || !productId) {\r",
+                  "    console.log(\"Ошибка: нет username или productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Новое количество (случайное от 1 до 10)\r",
+                  "    const newQuantity = Math.floor(Math.random() * 10) + 1;\r",
+                  "    \r",
+                  "    const requestBody = {\r",
+                  "        productId: productId,\r",
+                  "        newQuantity: newQuantity\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"newQuantity\", newQuantity);\r",
+                  "    console.log(\"Изменяем количество товара\", productId, \"на\", newQuantity);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(requestBody),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество товара изменилось\", function() {\r",
+                  "    const expectedQuantity = pm.collectionVariables.get(\"newQuantity\");\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "    \r",
+                  "    pm.expect(actual[productId]).to.equal(expectedQuantity);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"ID корзины не изменился\", function() {\r",
+                  "    const expectedCartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "    const actualCartId = pm.response.json().shoppingCartId;\r",
+                  "    \r",
+                  "    pm.expect(actualCartId).to.equal(expectedCartId);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Проверка структуры ответа\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.have.property(\"shoppingCartId\");\r",
+                  "    pm.expect(response).to.have.property(\"products\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart/change-quantity?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart",
+                "change-quantity"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Удаление товаров из корзины",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!username || !productId) {\r",
+                  "    console.log(\"Ошибка: нет username или productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Массив товаров для удаления\r",
+                  "    const productsToRemove = [productId];\r",
+                  "    \r",
+                  "    console.log(\"Удаляем товары из корзины:\", productsToRemove);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(productsToRemove),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Товар удален из корзины\", function() {\r",
+                  "    const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    pm.expect(actual[productId]).to.be.undefined;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"ID корзины не изменился\", function() {\r",
+                  "    const expectedCartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "    const actualCartId = pm.response.json().shoppingCartId;\r",
+                  "    \r",
+                  "    pm.expect(actualCartId).to.equal(expectedCartId);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина не пустая (если были другие товары)\", function() {\r",
+                  "    const products = pm.response.json().products;\r",
+                  "    // Просто проверяем что products это объект\r",
+                  "    pm.expect(products).to.be.an(\"object\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart/remove?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart",
+                "remove"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Удаление товаров из корзины Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "\r",
+                  "if (!username) {\r",
+                  "    console.log(\"Ошибка: нет username\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Деактивируем корзину пользователя:\", username);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверяем что корзина очищена (через GET запрос)\r",
+                  "pm.test(\"Корзина очищена после DELETE\", function() {\r",
+                  "    const username = pm.collectionVariables.get(\"username\");\r",
+                  "    \r",
+                  "    pm.sendRequest({\r",
+                  "        url: pm.collectionVariables.get(\"baseUrl\") + \"/api/v1/shopping-cart?username=\" + username,\r",
+                  "        method: 'GET'\r",
+                  "    }, function(err, res) {\r",
+                  "        const cart = res.json();\r",
+                  "        \r",
+                  "        // Проверяем что корзина пустая\r",
+                  "        pm.expect(cart.products).to.be.empty;\r",
+                  "        console.log(\"Корзина очищена, ID:\", cart.shoppingCartId);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем новый статус (корзина пустая)\r",
+                  "pm.test(\"Обновляем статус корзины\", function() {\r",
+                  "    // Не удаляем shoppingCartId, так как он остался тот же\r",
+                  "    pm.collectionVariables.set(\"cartItems\", JSON.stringify({}));\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Warehouse",
+      "item": [
+        {
+          "name": "Получение адреса склада",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление нового товара на склад",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация данных для нового товара на складе\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар в shopping-store\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const newProduct = {\r",
+                  "        productId: productId,\r",
+                  "        fragile: Math.random() > 0.5,\r",
+                  "        weight: Number((Math.random() * 10 + 0.5).toFixed(2)),\r",
+                  "        dimension: {\r",
+                  "            width: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            height: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            depth: Number((Math.random() * 50 + 10).toFixed(2))\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"warehouseProduct\", JSON.stringify(newProduct));\r",
+                  "    console.log(\"Добавляем товар на склад:\", newProduct.productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(newProduct),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что товар добавился (опционально - через другой запрос)\r",
+                  "pm.test(\"Товар добавлен на склад\", function() {\r",
+                  "    console.log(\"Товар успешно добавлен на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление количества существующего товара на склад",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const quantity = Math.floor(Math.random() * 100) + 10; // 10-110 шт\r",
+                  "    \r",
+                  "    const addRequest = {\r",
+                  "        productId: productId,\r",
+                  "        quantity: quantity\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"addedQuantity\", quantity);\r",
+                  "    console.log(\"Добавляем\", quantity, \"шт товара\", productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(addRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество добавлено\", function() {\r",
+                  "    const quantity = pm.collectionVariables.get(\"addedQuantity\");\r",
+                  "    console.log(\"Добавлено\", quantity, \"шт на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/add",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Проверка наличия товаров",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const quantity = Math.floor(Math.random() * 100) + 10; // 10-110 шт\r",
+                  "    \r",
+                  "    const addRequest = {\r",
+                  "        productId: productId,\r",
+                  "        quantity: quantity\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"addedQuantity\", quantity);\r",
+                  "    console.log(\"Добавляем\", quantity, \"шт товара\", productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(addRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество добавлено\", function() {\r",
+                  "    const quantity = pm.collectionVariables.get(\"addedQuantity\");\r",
+                  "    console.log(\"Добавлено\", quantity, \"шт на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/add",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Сборка товаров в заказ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const cartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!cartId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет shoppingCartId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Генерируем orderId для теста\r",
+                  "    const orderId = crypto.randomUUID();\r",
+                  "    pm.collectionVariables.set(\"orderId\", orderId);\r",
+                  "    \r",
+                  "    console.log(\"Сборка заказа:\", {shoppingCartId: cartId, orderId: orderId});\r",
+                  "}\r",
+                  "// Тело запроса не требуется"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Ответ содержит параметры доставки\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"deliveryWeight\");\r",
+                  "    pm.expect(response).to.have.property(\"deliveryVolume\");\r",
+                  "    pm.expect(response).to.have.property(\"fragile\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Параметры доставки рассчитаны\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response.deliveryWeight).to.be.a('number').greaterThan(0);\r",
+                  "    pm.expect(response.deliveryVolume).to.be.a('number').greaterThan(0);\r",
+                  "    pm.expect(response.fragile).to.be.a('boolean');\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Заказ собран\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/assembly?shoppingCartId={{shoppingCartId}}&orderId={{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "assembly"
+              ],
+              "query": [
+                {
+                  "key": "shoppingCartId",
+                  "value": "{{shoppingCartId}}"
+                },
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Передача в доставку",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId. Сначала выполните assembly\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Генерируем deliveryId для теста\r",
+                  "    const deliveryId = crypto.randomUUID();\r",
+                  "    pm.collectionVariables.set(\"deliveryId\", deliveryId);\r",
+                  "    \r",
+                  "    console.log(\"Передача в доставку:\", {orderId: orderId, deliveryId: deliveryId});\r",
+                  "}\r",
+                  "// Тело запроса не требуется"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Заказ передан в доставку\", function() {\r",
+                  "    console.log(\"Заказ\", pm.collectionVariables.get(\"orderId\"), \r",
+                  "                \"передан в доставку\", pm.collectionVariables.get(\"deliveryId\"));\r",
+                  "});\r",
+                  "\r",
+                  "// Можно добавить проверку через GET запрос к order сервису"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/shipped?orderId={{orderId}}&deliveryId={{deliveryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "shipped"
+              ],
+              "query": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                },
+                {
+                  "key": "deliveryId",
+                  "value": "{{deliveryId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Возврат товаров на склад",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Товары для возврата\r",
+                  "    const returnItems = {};\r",
+                  "    returnItems[productId] = Math.floor(Math.random() * 3) + 1; // 1-3 шт\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"returnItems\", JSON.stringify(returnItems));\r",
+                  "    console.log(\"Возврат товаров:\", returnItems);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(returnItems),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Товары возвращены на склад\", function() {\r",
+                  "    const items = JSON.parse(pm.collectionVariables.get(\"returnItems\"));\r",
+                  "    console.log(\"Возвращено товаров:\", Object.values(items).reduce((a, b) => a + b, 0), \"шт\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/return",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "return"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Order",
+      "item": [
+        {
+          "name": "Создание нового заказа",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "const cartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!username || !cartId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет username, shoppingCartId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Правильная структура для CreateNewOrderRequest\r",
+                  "    const orderRequest = {\r",
+                  "        username: username,\r",
+                  "        shoppingCart: {\r",
+                  "            shoppingCartId: cartId,\r",
+                  "            products: {\r",
+                  "                [productId]: 1\r",
+                  "            }\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Создание заказа с правильной структурой\");\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Заказ создан\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"username\");\r",
+                  "    pm.expect(response).to.have.property(\"products\");\r",
+                  "    pm.expect(response).to.have.property(\"state\");\r",
+                  "    pm.expect(response.state).to.equal(\"NEW\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Сохраняем orderId\", function() {\r",
+                  "    const orderId = pm.response.json().orderId;\r",
+                  "    if (orderId) {\r",
+                  "        pm.collectionVariables.set(\"orderId\", orderId);\r",
+                  "        console.log(\"Сохранен orderId:\", orderId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение заказа для пользователя",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "if (!username) {\r",
+                  "    console.log(\"Ошибка: нет username\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Получен список заказов\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.be.an(\"array\");\r",
+                  "    \r",
+                  "    if (response.length > 0) {\r",
+                  "        pm.expect(response[0]).to.have.property(\"orderId\");\r",
+                  "        pm.expect(response[0]).to.have.property(\"state\");\r",
+                  "    }\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Наш заказ есть в списке\", function() {\r",
+                  "    const orders = pm.response.json();\r",
+                  "    const ourOrderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "    \r",
+                  "    const found = orders.some(order => order.orderId === ourOrderId);\r",
+                  "    pm.expect(found).to.be.true;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Оплата заказа",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Оплата заказа (просто UUID):\", orderId);\r",
+                  "    \r",
+                  "    // Отправляем просто UUID как строку, а не объект\r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),  // <-- просто строка с UUID\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Оплата заказа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Оплата заказа - заказ оплачен\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"state\");\r",
+                  "    pm.expect(response.state).to.equal(\"PAID\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Оплата заказа - сохраняем paymentId\", function() {\r",
+                  "    const paymentId = pm.response.json().paymentId;\r",
+                  "    if (paymentId) {\r",
+                  "        pm.collectionVariables.set(\"paymentId\", paymentId);\r",
+                  "        console.log(\"Сохранен paymentId:\", paymentId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order",
+                "payment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Подтверждение доставки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Подтверждение доставки заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Подтверждение доставки - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Подтверждение доставки - статус заказа изменился\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"state\");\r",
+                  "    pm.expect(response.state).to.be.oneOf([\"DELIVERED\", \"ON_DELIVERY\"]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Подтверждение доставки - сохранен deliveryId\", function() {\r",
+                  "    const deliveryId = pm.response.json().deliveryId;\r",
+                  "    if (deliveryId) {\r",
+                  "        pm.collectionVariables.set(\"deliveryId\", deliveryId);\r",
+                  "        console.log(\"Сохранен deliveryId:\", deliveryId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order/delivery",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order",
+                "delivery"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Завершение заказа",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Завершение заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Завершение заказа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Завершение заказа - статус COMPLETED\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response.state).to.equal(\"COMPLETED\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Завершение заказа - финальные данные\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    console.log(\"Заказ\", response.orderId, \"завершен\");\r",
+                  "    console.log(\"Финальная стоимость:\", response.totalPrice);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order/completed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order",
+                "completed"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание нового товара в каталоге Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация случайных данных\r",
+                  "const productNames = [\"Умная лампа\", \"Датчик движения\", \"Розетка Wi-Fi\"];\r",
+                  "const descriptions = [\"Высокое качество\", \"Простая установка\"];\r",
+                  "const categories = [\"LIGHTING\", \"CONTROL\", \"SENSORS\"];\r",
+                  "const quantityStates = [\"ENDED\", \"FEW\", \"ENOUGH\", \"MANY\"];\r",
+                  "const productStates = [\"ACTIVE\", \"DEACTIVATE\"];\r",
+                  "\r",
+                  "const randomProduct = {\r",
+                  "    productName: productNames[Math.floor(Math.random() * productNames.length)] + \" \" + Date.now(),\r",
+                  "    description: descriptions[Math.floor(Math.random() * descriptions.length)],\r",
+                  "    imageSrc: \"images/test.jpg\",\r",
+                  "    quantityState: quantityStates[Math.floor(Math.random() * quantityStates.length)],\r",
+                  "    productState: productStates[Math.floor(Math.random() * productStates.length)],\r",
+                  "    productCategory: categories[Math.floor(Math.random() * categories.length)],\r",
+                  "    price: Number((Math.random() * 1000).toFixed(2))\r",
+                  "};\r",
+                  "\r",
+                  "// Сохраняем для тестов\r",
+                  "pm.variables.set(\"expectedProduct\", JSON.stringify(randomProduct));\r",
+                  "\r",
+                  "// ПРАВИЛЬНЫЙ способ установить тело запроса\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify(randomProduct),\r",
+                  "    options: { raw: { language: 'json' } }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Status 200 or 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка полей\r",
+                  "pm.test(\"Check product fields\", function() {\r",
+                  "    const expected = JSON.parse(pm.variables.get(\"expectedProduct\"));\r",
+                  "    const actual = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(actual).to.have.property(\"productId\");\r",
+                  "    pm.expect(actual.productName).to.equal(expected.productName);\r",
+                  "    pm.expect(actual.price).to.equal(expected.price);\r",
+                  "    pm.expect(actual.productCategory).to.equal(expected.productCategory);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем ID в КОЛЛЕКЦИЮ\r",
+                  "pm.test(\"Сохраняем productId в коллекцию\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    if (response.productId) {\r",
+                  "        pm.collectionVariables.set(\"productId\", response.productId);\r",
+                  "        console.log(\"Сохранен productId:\", response.productId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление нового товара на склад Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация данных для нового товара на складе\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар в shopping-store\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const newProduct = {\r",
+                  "        productId: productId,\r",
+                  "        fragile: Math.random() > 0.5,\r",
+                  "        weight: Number((Math.random() * 10 + 0.5).toFixed(2)),\r",
+                  "        dimension: {\r",
+                  "            width: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            height: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            depth: Number((Math.random() * 50 + 10).toFixed(2))\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"warehouseProduct\", JSON.stringify(newProduct));\r",
+                  "    console.log(\"Добавляем товар на склад:\", newProduct.productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(newProduct),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что товар добавился (опционально - через другой запрос)\r",
+                  "pm.test(\"Товар добавлен на склад\", function() {\r",
+                  "    console.log(\"Товар успешно добавлен на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление количества существующего товара на склад Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const quantity = Math.floor(Math.random() * 100) + 10; // 10-110 шт\r",
+                  "    \r",
+                  "    const addRequest = {\r",
+                  "        productId: productId,\r",
+                  "        quantity: quantity\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"addedQuantity\", quantity);\r",
+                  "    console.log(\"Добавляем\", quantity, \"шт товара\", productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(addRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество добавлено\", function() {\r",
+                  "    const quantity = pm.collectionVariables.get(\"addedQuantity\");\r",
+                  "    console.log(\"Добавлено\", quantity, \"шт на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/add",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление товара в карзину Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация тестового username\r",
+                  "const usernames = [\"alex_ivanov\", \"maria_petrova\", \"ivan_smirnov\", \"olga_sokolova\"];\r",
+                  "const randomUser = usernames[Math.floor(Math.random() * usernames.length)] + Date.now();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"username\", randomUser);\r",
+                  "console.log(\"Тестируем пользователя:\", randomUser);\r",
+                  "\r",
+                  "// Данные для корзины (нужен существующий productId)\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const cartItems = {};\r",
+                  "    cartItems[productId] = Math.floor(Math.random() * 5) + 1; // 1-5 шт\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"cartItems\", JSON.stringify(cartItems));\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(cartItems),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 или 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит добавленные товары\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"cartItems\"));\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    Object.keys(expected).forEach(productId => {\r",
+                  "        pm.expect(actual[productId]).to.equal(expected[productId]);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина привязана к правильному пользователю\", function() {\r",
+                  "    const username = pm.collectionVariables.get(\"username\");\r",
+                  "    pm.expect(pm.response.json().username).to.equal(username);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем shoppingCartId\r",
+                  "pm.test(\"Сохраняем shoppingCartId\", function() {\r",
+                  "    const cartId = pm.response.json().shoppingCartId;\r",
+                  "    if (cartId) {\r",
+                  "        pm.collectionVariables.set(\"shoppingCartId\", cartId);\r",
+                  "        console.log(\"Сохранен shoppingCartId:\", cartId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Получение заказа для пользователя Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "if (!username) {\r",
+                  "    console.log(\"Ошибка: нет username\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Получен список заказов\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.be.an(\"array\");\r",
+                  "    \r",
+                  "    if (response.length > 0) {\r",
+                  "        pm.expect(response[0]).to.have.property(\"orderId\");\r",
+                  "        pm.expect(response[0]).to.have.property(\"state\");\r",
+                  "    }\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Наш заказ есть в списке\", function() {\r",
+                  "    const orders = pm.response.json();\r",
+                  "    const ourOrderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "    \r",
+                  "    const found = orders.some(order => order.orderId === ourOrderId);\r",
+                  "    pm.expect(found).to.be.true;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание нового заказа Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "const cartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!username || !cartId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет username, shoppingCartId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Правильная структура для CreateNewOrderRequest\r",
+                  "    const orderRequest = {\r",
+                  "        username: username,\r",
+                  "        shoppingCart: {\r",
+                  "            shoppingCartId: cartId,\r",
+                  "            products: {\r",
+                  "                [productId]: 1\r",
+                  "            }\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Создание заказа с правильной структурой\");\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Заказ создан\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"username\");\r",
+                  "    pm.expect(response).to.have.property(\"products\");\r",
+                  "    pm.expect(response).to.have.property(\"state\");\r",
+                  "    pm.expect(response.state).to.equal(\"NEW\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Сохраняем orderId\", function() {\r",
+                  "    const orderId = pm.response.json().orderId;\r",
+                  "    if (orderId) {\r",
+                  "        pm.collectionVariables.set(\"orderId\", orderId);\r",
+                  "        console.log(\"Сохранен orderId:\", orderId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Пересчет общей стоимости",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Пересчет стоимости заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Пересчет стоимости - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Пересчет стоимости - получена актуальная сумма\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"totalPrice\");\r",
+                  "    pm.expect(response.totalPrice).to.be.a(\"number\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Пересчет стоимости - стоимость положительная\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.totalPrice).to.be.greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Пересчет стоимости - сохранена новая сумма\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Новая стоимость заказа:\", response.totalPrice);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order/calculate/total",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order",
+                "calculate",
+                "total"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Пересчет стоимости доставки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Пересчет стоимости заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Пересчет стоимости - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Пересчет стоимости - получена актуальная сумма\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"totalPrice\");\r",
+                  "    pm.expect(response.totalPrice).to.be.a(\"number\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Пересчет стоимости - стоимость положительная\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.totalPrice).to.be.greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Пересчет стоимости - сохранена новая сумма\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Новая стоимость заказа:\", response.totalPrice);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order/calculate/total",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order",
+                "calculate",
+                "total"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Возврат заказа",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!orderId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет orderId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const returnRequest = {\r",
+                  "        orderId: orderId,\r",
+                  "        products: {\r",
+                  "            [productId]: 1\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Возврат товаров по заказу:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(returnRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Возврат заказа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат заказа - статус RETURNED\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.state).to.equal(\"RETURNED\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат заказа - товары возвращены\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Заказ\", response.orderId, \"возвращен\");\r",
+                  "    console.log(\"Статус:\", response.state);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат заказа - проверка товаров\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "    \r",
+                  "    pm.expect(response.products[productId]).to.exist;\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order/return",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order",
+                "return"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "Создание нового товара в каталоге Copy 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация случайных данных\r",
+                  "const productNames = [\"Умная лампа\", \"Датчик движения\", \"Розетка Wi-Fi\"];\r",
+                  "const descriptions = [\"Высокое качество\", \"Простая установка\"];\r",
+                  "const categories = [\"LIGHTING\", \"CONTROL\", \"SENSORS\"];\r",
+                  "const quantityStates = [\"ENDED\", \"FEW\", \"ENOUGH\", \"MANY\"];\r",
+                  "const productStates = [\"ACTIVE\", \"DEACTIVATE\"];\r",
+                  "\r",
+                  "const randomProduct = {\r",
+                  "    productName: productNames[Math.floor(Math.random() * productNames.length)] + \" \" + Date.now(),\r",
+                  "    description: descriptions[Math.floor(Math.random() * descriptions.length)],\r",
+                  "    imageSrc: \"images/test.jpg\",\r",
+                  "    quantityState: quantityStates[Math.floor(Math.random() * quantityStates.length)],\r",
+                  "    productState: productStates[Math.floor(Math.random() * productStates.length)],\r",
+                  "    productCategory: categories[Math.floor(Math.random() * categories.length)],\r",
+                  "    price: Number((Math.random() * 1000).toFixed(2))\r",
+                  "};\r",
+                  "\r",
+                  "// Сохраняем для тестов\r",
+                  "pm.variables.set(\"expectedProduct\", JSON.stringify(randomProduct));\r",
+                  "\r",
+                  "// ПРАВИЛЬНЫЙ способ установить тело запроса\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify(randomProduct),\r",
+                  "    options: { raw: { language: 'json' } }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Status 200 or 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка полей\r",
+                  "pm.test(\"Check product fields\", function() {\r",
+                  "    const expected = JSON.parse(pm.variables.get(\"expectedProduct\"));\r",
+                  "    const actual = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(actual).to.have.property(\"productId\");\r",
+                  "    pm.expect(actual.productName).to.equal(expected.productName);\r",
+                  "    pm.expect(actual.price).to.equal(expected.price);\r",
+                  "    pm.expect(actual.productCategory).to.equal(expected.productCategory);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем ID в КОЛЛЕКЦИЮ\r",
+                  "pm.test(\"Сохраняем productId в коллекцию\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    if (response.productId) {\r",
+                  "        pm.collectionVariables.set(\"productId\", response.productId);\r",
+                  "        console.log(\"Сохранен productId:\", response.productId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление нового товара на склад Copy 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация данных для нового товара на складе\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар в shopping-store\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const newProduct = {\r",
+                  "        productId: productId,\r",
+                  "        fragile: Math.random() > 0.5,\r",
+                  "        weight: Number((Math.random() * 10 + 0.5).toFixed(2)),\r",
+                  "        dimension: {\r",
+                  "            width: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            height: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            depth: Number((Math.random() * 50 + 10).toFixed(2))\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"warehouseProduct\", JSON.stringify(newProduct));\r",
+                  "    console.log(\"Добавляем товар на склад:\", newProduct.productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(newProduct),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что товар добавился (опционально - через другой запрос)\r",
+                  "pm.test(\"Товар добавлен на склад\", function() {\r",
+                  "    console.log(\"Товар успешно добавлен на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление количества существующего товара на склад Copy 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const quantity = Math.floor(Math.random() * 100) + 10; // 10-110 шт\r",
+                  "    \r",
+                  "    const addRequest = {\r",
+                  "        productId: productId,\r",
+                  "        quantity: quantity\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"addedQuantity\", quantity);\r",
+                  "    console.log(\"Добавляем\", quantity, \"шт товара\", productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(addRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество добавлено\", function() {\r",
+                  "    const quantity = pm.collectionVariables.get(\"addedQuantity\");\r",
+                  "    console.log(\"Добавлено\", quantity, \"шт на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/add",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление товара в карзину Copy 2",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация тестового username\r",
+                  "const usernames = [\"alex_ivanov\", \"maria_petrova\", \"ivan_smirnov\", \"olga_sokolova\"];\r",
+                  "const randomUser = usernames[Math.floor(Math.random() * usernames.length)] + Date.now();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"username\", randomUser);\r",
+                  "console.log(\"Тестируем пользователя:\", randomUser);\r",
+                  "\r",
+                  "// Данные для корзины (нужен существующий productId)\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const cartItems = {};\r",
+                  "    cartItems[productId] = Math.floor(Math.random() * 5) + 1; // 1-5 шт\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"cartItems\", JSON.stringify(cartItems));\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(cartItems),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 или 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит добавленные товары\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"cartItems\"));\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    Object.keys(expected).forEach(productId => {\r",
+                  "        pm.expect(actual[productId]).to.equal(expected[productId]);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина привязана к правильному пользователю\", function() {\r",
+                  "    const username = pm.collectionVariables.get(\"username\");\r",
+                  "    pm.expect(pm.response.json().username).to.equal(username);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем shoppingCartId\r",
+                  "pm.test(\"Сохраняем shoppingCartId\", function() {\r",
+                  "    const cartId = pm.response.json().shoppingCartId;\r",
+                  "    if (cartId) {\r",
+                  "        pm.collectionVariables.set(\"shoppingCartId\", cartId);\r",
+                  "        console.log(\"Сохранен shoppingCartId:\", cartId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание нового заказа (перед расчетом)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация тестового username\r",
+                  "const usernames = [\"alex_ivanov\", \"maria_petrova\", \"ivan_smirnov\", \"olga_sokolova\"];\r",
+                  "const randomUser = usernames[Math.floor(Math.random() * usernames.length)] + Date.now();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"username\", randomUser);\r",
+                  "console.log(\"Тестируем пользователя:\", randomUser);\r",
+                  "\r",
+                  "// Данные для корзины (нужен существующий productId)\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const cartItems = {};\r",
+                  "    cartItems[productId] = Math.floor(Math.random() * 5) + 1; // 1-5 шт\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"cartItems\", JSON.stringify(cartItems));\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(cartItems),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 или 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит добавленные товары\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"cartItems\"));\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    Object.keys(expected).forEach(productId => {\r",
+                  "        pm.expect(actual[productId]).to.equal(expected[productId]);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина привязана к правильному пользователю\", function() {\r",
+                  "    const username = pm.collectionVariables.get(\"username\");\r",
+                  "    pm.expect(pm.response.json().username).to.equal(username);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем shoppingCartId\r",
+                  "pm.test(\"Сохраняем shoppingCartId\", function() {\r",
+                  "    const cartId = pm.response.json().shoppingCartId;\r",
+                  "    if (cartId) {\r",
+                  "        pm.collectionVariables.set(\"shoppingCartId\", cartId);\r",
+                  "        console.log(\"Сохранен shoppingCartId:\", cartId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Расчёт стоимости товаров в заказе",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Полный расчёт стоимости (товары + доставка + НДС)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!orderId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет orderId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const requestBody = {\r",
+                  "        orderId: orderId,\r",
+                  "        products: {\r",
+                  "            [productId]: 2\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Расчёт с явной передачей товаров\");\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(requestBody),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Полный расчёт - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Полный расчёт - получена итоговая сумма\", function() {\r",
+                  "    const total = pm.response.json();\r",
+                  "    pm.expect(total).to.be.a(\"number\").greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Полный расчёт - сравнение с предыдущими расчётами\", function() {\r",
+                  "    const total = pm.response.json();\r",
+                  "    const productCost = 1479.2; // из предыдущего запроса\r",
+                  "    \r",
+                  "    console.log(\"Стоимость товаров:\", productCost);\r",
+                  "    console.log(\"Итоговая стоимость (с доставкой и НДС):\", total);\r",
+                  "    console.log(\"Разница (доставка + НДС):\", (total - productCost).toFixed(2));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Полный расчёт - сохранение итога\", function() {\r",
+                  "    const total = pm.response.json();\r",
+                  "    pm.collectionVariables.set(\"finalTotal\", total);\r",
+                  "    console.log(\"Сохранена итоговая стоимость:\", total);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment/totalCost",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "totalCost"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание платежа",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "const totalPrice = pm.collectionVariables.get(\"finalTotal\") || 1627.12;\r",
+                  "const productPrice = 1479.2; // из предыдущего расчета\r",
+                  "\r",
+                  "if (!orderId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет orderId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const paymentRequest = {\r",
+                  "        orderId: orderId,\r",
+                  "        products: {\r",
+                  "            [productId]: 2\r",
+                  "        },\r",
+                  "        deliveryPrice: totalPrice,\r",
+                  "        productPrice: productPrice,\r",
+                  "        totalPrice: totalPrice\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Создание платежа для заказа:\", orderId);\r",
+                  "    console.log(\"Товары:\", paymentRequest.products);\r",
+                  "    console.log(\"Сумма платежа:\", totalPrice);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(paymentRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Создание платежа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Создание платежа - проверка полей\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.have.property(\"paymentId\");\r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"totalPrice\");\r",
+                  "    pm.expect(response).to.have.property(\"status\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Создание платежа - сумма совпадает\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    const expectedTotal = pm.collectionVariables.get(\"finalTotal\") || 1627.12;\r",
+                  "    pm.expect(response.totalPrice).to.equal(expectedTotal);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Создание платежа - сохранение paymentId\", function() {\r",
+                  "    const paymentId = pm.response.json().paymentId;\r",
+                  "    if (paymentId) {\r",
+                  "        pm.collectionVariables.set(\"paymentId\", paymentId);\r",
+                  "        console.log(\"Сохранен paymentId:\", paymentId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ошибка оплаты",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const paymentId = pm.collectionVariables.get(\"paymentId\");\r",
+                  "\r",
+                  "if (!paymentId) {\r",
+                  "    console.log(\"Ошибка: нет paymentId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Ошибка оплаты для платежа:\", paymentId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(paymentId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ошибка оплаты - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Ошибка оплаты - статус FAILED\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.equal(\"FAILED\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Ошибка оплаты - проверка сумм\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Платеж\", response.paymentId, \"отменен\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment/failed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "failed"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Возврат платежа",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const paymentId = pm.collectionVariables.get(\"paymentId\");\r",
+                  "\r",
+                  "if (!paymentId) {\r",
+                  "    console.log(\"Ошибка: нет paymentId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Возврат платежа:\", paymentId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(paymentId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Возврат платежа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат платежа - статус REFUNDED\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.equal(\"REFUNDED\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат платежа - сумма возврата\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Платеж\", response.paymentId, \"возвращен на сумму:\", response.totalCost);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment/refund",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "refund"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Delivery",
+      "item": [
+        {
+          "name": "Создание нового товара в каталоге Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация случайных данных\r",
+                  "const productNames = [\"Умная лампа\", \"Датчик движения\", \"Розетка Wi-Fi\"];\r",
+                  "const descriptions = [\"Высокое качество\", \"Простая установка\"];\r",
+                  "const categories = [\"LIGHTING\", \"CONTROL\", \"SENSORS\"];\r",
+                  "const quantityStates = [\"ENDED\", \"FEW\", \"ENOUGH\", \"MANY\"];\r",
+                  "const productStates = [\"ACTIVE\", \"DEACTIVATE\"];\r",
+                  "\r",
+                  "const randomProduct = {\r",
+                  "    productName: productNames[Math.floor(Math.random() * productNames.length)] + \" \" + Date.now(),\r",
+                  "    description: descriptions[Math.floor(Math.random() * descriptions.length)],\r",
+                  "    imageSrc: \"images/test.jpg\",\r",
+                  "    quantityState: quantityStates[Math.floor(Math.random() * quantityStates.length)],\r",
+                  "    productState: productStates[Math.floor(Math.random() * productStates.length)],\r",
+                  "    productCategory: categories[Math.floor(Math.random() * categories.length)],\r",
+                  "    price: Number((Math.random() * 1000).toFixed(2))\r",
+                  "};\r",
+                  "\r",
+                  "// Сохраняем для тестов\r",
+                  "pm.variables.set(\"expectedProduct\", JSON.stringify(randomProduct));\r",
+                  "\r",
+                  "// ПРАВИЛЬНЫЙ способ установить тело запроса\r",
+                  "pm.request.body.update({\r",
+                  "    mode: 'raw',\r",
+                  "    raw: JSON.stringify(randomProduct),\r",
+                  "    options: { raw: { language: 'json' } }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Проверка статуса\r",
+                  "pm.test(\"Status 200 or 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка полей\r",
+                  "pm.test(\"Check product fields\", function() {\r",
+                  "    const expected = JSON.parse(pm.variables.get(\"expectedProduct\"));\r",
+                  "    const actual = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(actual).to.have.property(\"productId\");\r",
+                  "    pm.expect(actual.productName).to.equal(expected.productName);\r",
+                  "    pm.expect(actual.price).to.equal(expected.price);\r",
+                  "    pm.expect(actual.productCategory).to.equal(expected.productCategory);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем ID в КОЛЛЕКЦИЮ\r",
+                  "pm.test(\"Сохраняем productId в коллекцию\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    if (response.productId) {\r",
+                  "        pm.collectionVariables.set(\"productId\", response.productId);\r",
+                  "        console.log(\"Сохранен productId:\", response.productId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-store",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-store"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление нового товара на склад Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация данных для нового товара на складе\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар в shopping-store\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const newProduct = {\r",
+                  "        productId: productId,\r",
+                  "        fragile: Math.random() > 0.5,\r",
+                  "        weight: Number((Math.random() * 10 + 0.5).toFixed(2)),\r",
+                  "        dimension: {\r",
+                  "            width: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            height: Number((Math.random() * 50 + 10).toFixed(2)),\r",
+                  "            depth: Number((Math.random() * 50 + 10).toFixed(2))\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"warehouseProduct\", JSON.stringify(newProduct));\r",
+                  "    console.log(\"Добавляем товар на склад:\", newProduct.productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(newProduct),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "// Проверка что товар добавился (опционально - через другой запрос)\r",
+                  "pm.test(\"Товар добавлен на склад\", function() {\r",
+                  "    console.log(\"Товар успешно добавлен на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление количества существующего товара на склад Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const quantity = Math.floor(Math.random() * 100) + 10; // 10-110 шт\r",
+                  "    \r",
+                  "    const addRequest = {\r",
+                  "        productId: productId,\r",
+                  "        quantity: quantity\r",
+                  "    };\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"addedQuantity\", quantity);\r",
+                  "    console.log(\"Добавляем\", quantity, \"шт товара\", productId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(addRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Количество добавлено\", function() {\r",
+                  "    const quantity = pm.collectionVariables.get(\"addedQuantity\");\r",
+                  "    console.log(\"Добавлено\", quantity, \"шт на склад\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/add",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Добавление товара в карзину Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Генерация тестового username\r",
+                  "const usernames = [\"alex_ivanov\", \"maria_petrova\", \"ivan_smirnov\", \"olga_sokolova\"];\r",
+                  "const randomUser = usernames[Math.floor(Math.random() * usernames.length)] + Date.now();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"username\", randomUser);\r",
+                  "console.log(\"Тестируем пользователя:\", randomUser);\r",
+                  "\r",
+                  "// Данные для корзины (нужен существующий productId)\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "if (!productId) {\r",
+                  "    console.log(\"Ошибка: нет productId. Сначала создайте товар\");\r",
+                  "    postman.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const cartItems = {};\r",
+                  "    cartItems[productId] = Math.floor(Math.random() * 5) + 1; // 1-5 шт\r",
+                  "    \r",
+                  "    pm.collectionVariables.set(\"cartItems\", JSON.stringify(cartItems));\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(cartItems),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 или 201\", function() {\r",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина содержит добавленные товары\", function() {\r",
+                  "    const expected = JSON.parse(pm.collectionVariables.get(\"cartItems\"));\r",
+                  "    const actual = pm.response.json().products;\r",
+                  "    \r",
+                  "    Object.keys(expected).forEach(productId => {\r",
+                  "        pm.expect(actual[productId]).to.equal(expected[productId]);\r",
+                  "    });\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Корзина привязана к правильному пользователю\", function() {\r",
+                  "    const username = pm.collectionVariables.get(\"username\");\r",
+                  "    pm.expect(pm.response.json().username).to.equal(username);\r",
+                  "});\r",
+                  "\r",
+                  "// Сохраняем shoppingCartId\r",
+                  "pm.test(\"Сохраняем shoppingCartId\", function() {\r",
+                  "    const cartId = pm.response.json().shoppingCartId;\r",
+                  "    if (cartId) {\r",
+                  "        pm.collectionVariables.set(\"shoppingCartId\", cartId);\r",
+                  "        console.log(\"Сохранен shoppingCartId:\", cartId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/shopping-cart?username={{username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "shopping-cart"
+              ],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "{{username}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание нового заказа Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const username = pm.collectionVariables.get(\"username\");\r",
+                  "const cartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!username || !cartId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет username, shoppingCartId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Правильная структура для CreateNewOrderRequest\r",
+                  "    const orderRequest = {\r",
+                  "        username: username,\r",
+                  "        shoppingCart: {\r",
+                  "            shoppingCartId: cartId,\r",
+                  "            products: {\r",
+                  "                [productId]: 1\r",
+                  "            }\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Создание заказа с правильной структурой\");\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Заказ создан\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"username\");\r",
+                  "    pm.expect(response).to.have.property(\"products\");\r",
+                  "    pm.expect(response).to.have.property(\"state\");\r",
+                  "    pm.expect(response.state).to.equal(\"NEW\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Сохраняем orderId\", function() {\r",
+                  "    const orderId = pm.response.json().orderId;\r",
+                  "    if (orderId) {\r",
+                  "        pm.collectionVariables.set(\"orderId\", orderId);\r",
+                  "        console.log(\"Сохранен orderId:\", orderId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "order"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Сборка товаров в заказ Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const cartId = pm.collectionVariables.get(\"shoppingCartId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!cartId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет shoppingCartId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    // Генерируем orderId для теста\r",
+                  "    const orderId = crypto.randomUUID();\r",
+                  "    pm.collectionVariables.set(\"orderId\", orderId);\r",
+                  "    \r",
+                  "    console.log(\"Сборка заказа:\", {shoppingCartId: cartId, orderId: orderId});\r",
+                  "}\r",
+                  "// Тело запроса не требуется"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Статус ответа 200 OK\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Ответ содержит параметры доставки\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response).to.have.property(\"deliveryWeight\");\r",
+                  "    pm.expect(response).to.have.property(\"deliveryVolume\");\r",
+                  "    pm.expect(response).to.have.property(\"fragile\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Параметры доставки рассчитаны\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    \r",
+                  "    pm.expect(response.deliveryWeight).to.be.a('number').greaterThan(0);\r",
+                  "    pm.expect(response.deliveryVolume).to.be.a('number').greaterThan(0);\r",
+                  "    pm.expect(response.fragile).to.be.a('boolean');\r",
+                  "});\r",
+                  "\r",
+                  "console.log(\"Заказ собран\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/warehouse/assembly?shoppingCartId={{shoppingCartId}}&orderId={{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "warehouse",
+                "assembly"
+              ],
+              "query": [
+                {
+                  "key": "shoppingCartId",
+                  "value": "{{shoppingCartId}}"
+                },
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Полный расчёт стоимости (товары + доставка + НДС) Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "\r",
+                  "if (!orderId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет orderId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const requestBody = {\r",
+                  "        orderId: orderId,\r",
+                  "        products: {\r",
+                  "            [productId]: 2\r",
+                  "        }\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Расчёт с явной передачей товаров\");\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(requestBody),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Полный расчёт - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Полный расчёт - получена итоговая сумма\", function() {\r",
+                  "    const total = pm.response.json();\r",
+                  "    pm.expect(total).to.be.a(\"number\").greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Полный расчёт - сравнение с предыдущими расчётами\", function() {\r",
+                  "    const total = pm.response.json();\r",
+                  "    const productCost = 1479.2; // из предыдущего запроса\r",
+                  "    \r",
+                  "    console.log(\"Стоимость товаров:\", productCost);\r",
+                  "    console.log(\"Итоговая стоимость (с доставкой и НДС):\", total);\r",
+                  "    console.log(\"Разница (доставка + НДС):\", (total - productCost).toFixed(2));\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Полный расчёт - сохранение итога\", function() {\r",
+                  "    const total = pm.response.json();\r",
+                  "    pm.collectionVariables.set(\"finalTotal\", total);\r",
+                  "    console.log(\"Сохранена итоговая стоимость:\", total);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment/totalCost",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "totalCost"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание платежа Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "const productId = pm.collectionVariables.get(\"productId\");\r",
+                  "const totalPrice = pm.collectionVariables.get(\"finalTotal\") || 1627.12;\r",
+                  "const productPrice = 1479.2; // из предыдущего расчета\r",
+                  "\r",
+                  "if (!orderId || !productId) {\r",
+                  "    console.log(\"Ошибка: нет orderId или productId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const paymentRequest = {\r",
+                  "        orderId: orderId,\r",
+                  "        products: {\r",
+                  "            [productId]: 2\r",
+                  "        },\r",
+                  "        deliveryPrice: totalPrice,\r",
+                  "        productPrice: productPrice,\r",
+                  "        totalPrice: totalPrice\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Создание платежа для заказа:\", orderId);\r",
+                  "    console.log(\"Товары:\", paymentRequest.products);\r",
+                  "    console.log(\"Сумма платежа:\", totalPrice);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(paymentRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Создание платежа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Создание платежа - проверка полей\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.have.property(\"paymentId\");\r",
+                  "    pm.expect(response).to.have.property(\"orderId\");\r",
+                  "    pm.expect(response).to.have.property(\"totalPrice\");\r",
+                  "    pm.expect(response).to.have.property(\"status\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Создание платежа - сумма совпадает\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    const expectedTotal = pm.collectionVariables.get(\"finalTotal\") || 1627.12;\r",
+                  "    pm.expect(response.totalPrice).to.equal(expectedTotal);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Создание платежа - сохранение paymentId\", function() {\r",
+                  "    const paymentId = pm.response.json().paymentId;\r",
+                  "    if (paymentId) {\r",
+                  "        pm.collectionVariables.set(\"paymentId\", paymentId);\r",
+                  "        console.log(\"Сохранен paymentId:\", paymentId);\r",
+                  "    }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Возврат платежа Copy",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const paymentId = pm.collectionVariables.get(\"paymentId\");\r",
+                  "\r",
+                  "if (!paymentId) {\r",
+                  "    console.log(\"Ошибка: нет paymentId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Возврат платежа:\", paymentId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(paymentId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Возврат платежа - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат платежа - статус REFUNDED\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.equal(\"REFUNDED\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Возврат платежа - сумма возврата\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Платеж\", response.paymentId, \"возвращен на сумму:\", response.totalCost);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payment/refund",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payment",
+                "refund"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Создание доставки",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "Расчет стоимости доставки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const deliveryId = pm.collectionVariables.get(\"deliveryId\");\r",
+                  "\r",
+                  "if (!deliveryId) {\r",
+                  "    console.log(\"Ошибка: нет deliveryId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    const costRequest = {\r",
+                  "        deliveryId: deliveryId\r",
+                  "    };\r",
+                  "    \r",
+                  "    console.log(\"Расчет стоимости доставки для:\", deliveryId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(costRequest),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Расчет стоимости - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Расчет стоимости - получена стоимость\", function() {\r",
+                  "    const cost = pm.response.json();\r",
+                  "    pm.expect(cost).to.be.a(\"number\").greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Расчет стоимости - сохранение в коллекцию\", function() {\r",
+                  "    const cost = pm.response.json();\r",
+                  "    pm.collectionVariables.set(\"deliveryCost\", cost);\r",
+                  "    console.log(\"Стоимость доставки:\", cost);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/delivery/cost",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "delivery",
+                "cost"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Начало доставки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\"); // используем orderId, а не deliveryId\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Начало доставки для заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Начало доставки - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Начало доставки - статус IN_PROGRESS\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.equal(\"IN_PROGRESS\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Начало доставки - проверка данных\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Доставка\", response.deliveryId, \"в пути\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/delivery/in-progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "delivery",
+                "in-progress"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Успешная доставка",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\"); // используем orderId, а не deliveryId\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Начало доставки для заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Начало доставки - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Начало доставки - статус IN_PROGRESS\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.equal(\"IN_PROGRESS\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Начало доставки - проверка данных\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Доставка\", response.deliveryId, \"в пути\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/delivery/in-progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "delivery",
+                "in-progress"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ошибка доставки",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const orderId = pm.collectionVariables.get(\"orderId\");\r",
+                  "\r",
+                  "if (!orderId) {\r",
+                  "    console.log(\"Ошибка: нет orderId\");\r",
+                  "    pm.execution.setNextRequest(null);\r",
+                  "} else {\r",
+                  "    console.log(\"Ошибка доставки заказа:\", orderId);\r",
+                  "    \r",
+                  "    pm.request.body.update({\r",
+                  "        mode: 'raw',\r",
+                  "        raw: JSON.stringify(orderId),\r",
+                  "        options: { raw: { language: 'json' } }\r",
+                  "    });\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Ошибка доставки - статус 200 ОК\", function() {\r",
+                  "    pm.expect(pm.response.code).to.equal(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Ошибка доставки - статус FAILED\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.equal(\"FAILED\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Ошибка доставки - проверка\", function() {\r",
+                  "    const response = pm.response.json();\r",
+                  "    console.log(\"Доставка заказа\", response.orderId, \"не удалась\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/delivery/failed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "delivery",
+                "failed"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "lastProductId",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "category",
+      "value": ""
+    },
+    {
+      "key": "updatedProduct",
+      "value": ""
+    },
+    {
+      "key": "quantityState",
+      "value": ""
+    },
+    {
+      "key": "testCategory",
+      "value": ""
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "cartItems",
+      "value": ""
+    },
+    {
+      "key": "shoppingCartId",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "newQuantity",
+      "value": ""
+    },
+    {
+      "key": "warehouseProduct",
+      "value": ""
+    },
+    {
+      "key": "addedQuantity",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "deliveryId",
+      "value": ""
+    },
+    {
+      "key": "returnItems",
+      "value": ""
+    },
+    {
+      "key": "productCost",
+      "value": ""
+    },
+    {
+      "key": "lastOrder",
+      "value": ""
+    },
+    {
+      "key": "totalPrice",
+      "value": ""
+    },
+    {
+      "key": "finalTotal",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "deliveryCost",
+      "value": ""
+    }
+  ]
+}
