@@ -13,6 +13,11 @@ public interface ShoppingCartService {
     ShoppingCartDto getShoppingCart(String username);
 
     /**
+     * Получить корзину по идентификатору.
+     */
+    ShoppingCartDto getShoppingCartById(UUID shoppingCartId);
+
+    /**
      * Добавить товар в корзину.
      */
     ShoppingCartDto addProductToCart(String username, Map<UUID, Long> products);

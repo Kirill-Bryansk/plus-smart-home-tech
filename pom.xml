@@ -3,6 +3,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <!-- Родительский Spring Boot Starter - обеспечивает управление версиями
+         основных Spring зависимостей и плагинов -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -10,88 +13,98 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
+    <!-- Координаты проекта -->
     <groupId>ru.yandex.practicum</groupId>
     <artifactId>smart-home-tech</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>pom</packaging>  <!-- мультимодульный проект -->
 
+    <!-- Модули проекта: каждый отвечает за свой слой/функциональность -->
     <modules>
-        <module>telemetry</module>
-        <module>infra</module>
-        <module>commerce</module>
-        <module>grpc-echo-client</module>
-        <module>grpc-echo-server</module>
+        <module>telemetry</module>      <!-- сбор и обработка телеметрии с устройств -->
+        <module>infra</module>          <!-- инфраструктура: БД, брокеры, общие утилиты -->
+        <module>commerce</module>       <!-- бизнес-логика: заказы, платежи, подписки -->
+        <module>grpc-echo-client</module>   <!-- тестовый gRPC клиент -->
+        <module>grpc-echo-server</module>   <!-- тестовый gRPC сервер -->
     </modules>
 
+    <!-- Управление версиями -->
     <properties>
-        <java.version>21</java.version>
+        <!-- Базовые настройки -->
+        <java.version>21</java.version>  <!-- LTS версия Java, оптимальна для Spring Boot 3.x -->
 
-        <avro.version>1.11.3</avro.version>
-        <kafka-clients.version>3.6.1</kafka-clients.version>
-        <springdoc-openapi-starter.version>2.6.0</springdoc-openapi-starter.version>
-        <grpc-spring-boot-starter.version>3.1.0.RELEASE</grpc-spring-boot-starter.version>
-        <protobuf.version>3.23.4</protobuf.version>
-        <grpc.version>1.63.0</grpc.version>
+        <!-- Версии основных библиотек -->
+        <avro.version>1.11.3</avro.version>              <!-- Сериализация данных, совместима с Kafka -->
+        <kafka-clients.version>3.6.1</kafka-clients.version> <!-- Kafka клиент, соответствует Kafka 3.6 -->
+        <springdoc-openapi-starter.version>2.6.0</springdoc-openapi-starter.version> <!-- OpenAPI + Swagger UI -->
+        <grpc-spring-boot-starter.version>3.1.0.RELEASE</grpc-spring-boot-starter.version> <!-- Интеграция gRPC со Spring Boot -->
+        <protobuf.version>3.23.4</protobuf.version>      <!-- Protocol Buffers (совместим с gRPC) -->
+        <grpc.version>1.63.0</grpc.version>              <!-- gRPC фреймворк -->
+        <mapstruct.version>1.6.3</mapstruct.version>     <!-- Маппинг DTO ↔ Entity (поддержка Java 21) -->
+        <lombok.version>1.18.34</lombok.version>         <!-- Lombok для генерации кода -->
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version> <!-- Мост Lombok+MapStruct -->
 
-        <!--       Plugins       -->
+        <!-- Версии плагинов -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <avro-maven-plugin.version>${avro.version}</avro-maven-plugin.version>
-        <protobuf-plugin.version>2.4.0</protobuf-plugin.version>
-        <spring-cloud-dependencies.version>2023.0.3</spring-cloud-dependencies.version>
+        <avro-maven-plugin.version>${avro.version}</avro-maven-plugin.version> <!-- Генерация классов из Avro схем -->
+        <protobuf-plugin.version>2.4.0</protobuf-plugin.version> <!-- Генерация классов из proto файлов -->
+        <spring-cloud-dependencies.version>2023.0.3</spring-cloud-dependencies.version> <!-- Spring Cloud BOM -->
     </properties>
 
+    <!-- Централизованное управление зависимостями для всех модулей -->
     <dependencyManagement>
         <dependencies>
+            <!-- Avro - бинарная сериализация с поддержкой схем -->
             <dependency>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro</artifactId>
                 <version>${avro.version}</version>
             </dependency>
 
+            <!-- Kafka Clients - низкоуровневый клиент для работы с Kafka -->
             <dependency>
                 <groupId>org.apache.kafka</groupId>
                 <artifactId>kafka-clients</artifactId>
                 <version>${kafka-clients.version}</version>
             </dependency>
 
+            <!-- OpenAPI 3 и Swagger UI для документирования REST API -->
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc-openapi-starter.version}</version>
             </dependency>
 
-            <!--    GRPC dependencies management        -->
+            <!-- gRPC стартеры - универсальный и отдельно для сервера/клиента -->
             <dependency>
                 <groupId>net.devh</groupId>
                 <artifactId>grpc-spring-boot-starter</artifactId>
                 <version>${grpc-spring-boot-starter.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>net.devh</groupId>
                 <artifactId>grpc-server-spring-boot-starter</artifactId>
                 <version>${grpc-spring-boot-starter.version}</version>
             </dependency>
-            <!--    Отдельно для клиента        -->
             <dependency>
                 <groupId>net.devh</groupId>
                 <artifactId>grpc-client-spring-boot-starter</artifactId>
                 <version>${grpc-spring-boot-starter.version}</version>
             </dependency>
 
+            <!-- gRPC core библиотеки -->
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-stub</artifactId>
                 <version>${grpc.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-protobuf</artifactId>
                 <version>${grpc.version}</version>
             </dependency>
 
-            <!--   BOM Spring Cloud        -->
+            <!-- Spring Cloud BOM - управление версиями cloud компонентов -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -99,50 +112,117 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- MapStruct: генерация мапперов на этапе компиляции -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
+            <!-- Lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
+            <!-- Мост для совместимости Lombok + MapStruct -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-mapstruct-binding</artifactId>
+                <version>${lombok-mapstruct-binding.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
+    <!-- Конфигурация сборки для всех модулей -->
     <build>
         <pluginManagement>
             <plugins>
+                <!-- Компилятор Java с поддержкой annotation processing (для MapStruct/Lombok)
+                     ЕДИНСТВЕННОЕ объявление плагина с полной конфигурацией -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <!-- Явное указание версии Java для компиляции (переопределяет родительскую) -->
+                        <source>${java.version}</source>
+                        <!-- Целевая версия байт-кода (должна совпадать с source) -->
+                        <target>${java.version}</target>
+                        <!-- Пути для процессоров аннотаций - критично для работы Lombok и MapStruct вместе -->
+                        <annotationProcessorPaths>
+                            <!-- Lombok - генерация геттеров/сеттеров/конструкторов на этапе компиляции -->
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                            <!-- MapStruct processor - генерация реализации мапперов -->
+                            <path>
+                                <groupId>org.mapstruct</groupId>
+                                <artifactId>mapstruct-processor</artifactId>
+                                <version>${mapstruct.version}</version>
+                            </path>
+                            <!-- Мост для совместимости Lombok + MapStruct (чтобы MapStruct видел сгенерированные Lombok поля) -->
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok-mapstruct-binding</artifactId>
+                                <version>${lombok-mapstruct-binding.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
                 </plugin>
+
+                <!-- Генерация Java классов из Avro .avsc/.avdl файлов -->
                 <plugin>
                     <groupId>org.apache.avro</groupId>
                     <artifactId>avro-maven-plugin</artifactId>
                     <version>${avro-maven-plugin.version}</version>
                 </plugin>
+
+                <!-- Генерация Java классов из Protocol Buffers .proto файлов -->
                 <plugin>
                     <groupId>io.github.ascopes</groupId>
                     <artifactId>protobuf-maven-plugin</artifactId>
                     <version>${protobuf-plugin.version}</version>
                 </plugin>
+
+                <!-- Checkstyle для соблюдения кодстайла -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>3.3.1</version>
                     <configuration>
-                        <configLocation>checkstyle.xml</configLocation>
+                        <configLocation>checkstyle.xml</configLocation>  <!-- файл правил в корне проекта -->
                         <encoding>UTF-8</encoding>
-                        <consoleOutput>true</consoleOutput>
-                        <failsOnError>true</failsOnError>
+                        <consoleOutput>true</consoleOutput>              <!-- вывод в консоль -->
+                        <failsOnError>true</failsOnError>                <!-- остановка при ошибках -->
                         <linkXRef>false</linkXRef>
                     </configuration>
                     <executions>
                         <execution>
                             <id>validate</id>
-                            <phase>validate</phase>
+                            <phase>validate</phase>                      <!-- проверка на этапе validate -->
                             <goals>
                                 <goal>check</goal>
                             </goals>
                         </execution>
                     </executions>
                 </plugin>
+
+                <!-- Spring Boot Maven Plugin - для сборки исполняемых JAR -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
-
 </project>

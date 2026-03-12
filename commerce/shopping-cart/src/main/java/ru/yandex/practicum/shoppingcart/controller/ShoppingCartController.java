@@ -26,8 +26,18 @@ public class ShoppingCartController {
      */
     @GetMapping
     public ResponseEntity<ShoppingCartDto> getShoppingCart(@RequestParam String username) {
-        log.info("GET /api/v1/shopping-cart?username={}", username);
+        log.info("GET /api/v1/shopping-cart - получение корзины для пользователя: {}", username);
         ShoppingCartDto cart = shoppingCartService.getShoppingCart(username);
+        return ResponseEntity.ok(cart);
+    }
+
+    /**
+     * Получить корзину по идентификатору.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ShoppingCartDto> getShoppingCartById(@PathVariable UUID id) {
+        log.info("GET /api/v1/shopping-cart/{} - получение корзины по идентификатору", id);
+        ShoppingCartDto cart = shoppingCartService.getShoppingCartById(id);
         return ResponseEntity.ok(cart);
     }
 
@@ -38,7 +48,7 @@ public class ShoppingCartController {
     public ResponseEntity<ShoppingCartDto> addProductToShoppingCart(
             @RequestParam String username,
             @RequestBody Map<UUID, Long> products) {
-        log.info("PUT /api/v1/shopping-cart?username={}", username);
+        log.info("PUT /api/v1/shopping-cart - добавление товаров в корзину пользователя: {}, товары: {}", username, products);
         ShoppingCartDto cart = shoppingCartService.addProductToCart(username, products);
         return ResponseEntity.ok(cart);
     }
@@ -48,7 +58,7 @@ public class ShoppingCartController {
      */
     @DeleteMapping
     public ResponseEntity<Void> deactivateCurrentShoppingCart(@RequestParam String username) {
-        log.info("DELETE /api/v1/shopping-cart?username={}", username);
+        log.info("DELETE /api/v1/shopping-cart - деактивация корзины пользователя: {}", username);
         shoppingCartService.deactivateCart(username);
         return ResponseEntity.ok().build();
     }
@@ -60,7 +70,7 @@ public class ShoppingCartController {
     public ResponseEntity<ShoppingCartDto> removeFromShoppingCart(
             @RequestParam String username,
             @RequestBody List<UUID> productIds) {
-        log.info("POST /api/v1/shopping-cart/remove?username={}", username);
+        log.info("POST /api/v1/shopping-cart/remove - удаление товаров из корзины пользователя: {}, товары: {}", username, productIds);
         ShoppingCartDto cart = shoppingCartService.removeFromCart(username, productIds);
         return ResponseEntity.ok(cart);
     }
@@ -72,7 +82,8 @@ public class ShoppingCartController {
     public ResponseEntity<ShoppingCartDto> changeProductQuantity(
             @RequestParam String username,
             @Valid @RequestBody ChangeProductQuantityRequest request) {
-        log.info("POST /api/v1/shopping-cart/change-quantity?username={}", username);
+        log.info("POST /api/v1/shopping-cart/change-quantity - изменение количества товара для пользователя: {}, productId={}, новое количество={}",
+                username, request.getProductId(), request.getNewQuantity());
         ShoppingCartDto cart = shoppingCartService.changeProductQuantity(
                 username, request.getProductId(), request.getNewQuantity());
         return ResponseEntity.ok(cart);

@@ -1,0 +1,100 @@
+# Конфигурация Spring Cloud Gateway
+spring:
+  cloud:
+    gateway:
+      # Динамическая маршрутизация через Eureka
+      discovery:
+        locator:
+          enabled: false  # Отключено: используем явные маршруты
+
+      # Статические маршруты к микросервисам
+      routes:
+        # ==================== СУЩЕСТВУЮЩИЕ МАРШРУТЫ ====================
+
+        # МАРШРУТ ДЛЯ СЕРВИСА КОРЗИНЫ (Shopping Cart)
+        - id: shopping-cart-route
+          uri: lb://shopping-cart  # Load Balancer через Eureka
+          predicates:
+            - Path=/api/v1/shopping-cart/**  # Префикс API v1
+          filters:
+            - name: CircuitBreaker  # Защита от сбоев (Resilience4j)
+              args:
+                name: shoppingCartCircuitBreaker
+
+        # МАРШРУТ ДЛЯ СЕРВИСА МАГАЗИНА (Shopping Store) с повторами
+        - id: shopping-store-route
+          uri: lb://shopping-store
+          predicates:
+            - Path=/api/v1/shopping-store/**
+          filters:
+            - name: Retry  # Повторные запросы при ошибках
+              args:
+                retries: 3  # Количество попыток
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,NOT_FOUND  # Статусы для повтора
+                methods: GET  # Только для GET-запросов
+                backoff:
+                  firstBackoff: 50ms  # Первая задержка
+                  maxBackoff: 500ms  # Максимальная задержка
+                  factor: 2  # Множитель задержки
+                  basedOnPreviousValue: false
+
+        # МАРШРУТ ДЛЯ СЕРВИСА ЗАКАЗОВ (Order)
+        - id: order-route
+          uri: lb://order  # Load Balancer через Eureka
+          predicates:
+            - Path=/api/v1/order/**  # Префикс API v1
+          filters:
+            - name: CircuitBreaker  # Защита от сбоев
+              args:
+                name: orderCircuitBreaker
+
+        # МАРШРУТ ДЛЯ СЕРВИСА ОПЛАТЫ (Payment)
+        - id: payment-route
+          uri: lb://payment
+          predicates:
+            - Path=/api/v1/payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentCircuitBreaker
+
+        # МАРШРУТ ДЛЯ СЕРВИСА ДОСТАВКИ (Delivery)
+        - id: delivery-route
+          uri: lb://delivery
+          predicates:
+            - Path=/api/v1/delivery/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: deliveryCircuitBreaker
+
+        # МАРШРУТ ДЛЯ СЕРВИСА СКЛАДА (Warehouse)
+        - id: warehouse-route
+          uri: lb://warehouse
+          predicates:
+            - Path=/api/v1/warehouse/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: warehouseCircuitBreaker
+
+# Порт Gateway (единая точка входа для клиентов)
+server:
+  port: 8080
+
+# Мониторинг и метрики (Spring Actuator)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,gateway,metrics  # Доступные эндпоинты
+  endpoint:
+    health:
+      show-details: always  # Детальная информация о здоровье
+    gateway:
+      enabled: true  # Информация о маршрутах Gateway
+
+# Логирование работы Gateway
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG  # Отладка маршрутизации

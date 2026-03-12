@@ -3,6 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <!-- Родительский корневой проект -->
     <parent>
         <groupId>ru.yandex.practicum</groupId>
         <artifactId>smart-home-tech</artifactId>
@@ -10,12 +12,48 @@
     </parent>
 
     <artifactId>commerce</artifactId>
-    <packaging>pom</packaging>
+    <packaging>pom</packaging>  <!-- агрегирующий POM для модулей коммерции -->
 
+    <!-- Модули коммерческого домена -->
     <modules>
-        <module>shopping-cart</module>
-        <module>shopping-store</module>
-        <module>warehouse</module>
-        <module>interaction-api</module>
+        <module>shopping-cart</module>  <!-- корзина покупателя -->
+        <module>shopping-store</module>  <!-- магазин/каталог товаров -->
+        <module>warehouse</module>       <!-- складской учёт -->
+        <module>interaction-api</module> <!-- общий API для взаимодействия между модулями -->
+        <module>order</module>           <!-- обработка заказов -->
+        <module>delivery</module>        <!-- доставка -->
+        <module>payment</module>         <!-- платежи -->
     </modules>
+
+    <!-- Управление зависимостями для дочерних модулей -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Внутренние модули - явно указываем версии для переиспользования -->
+            <dependency>
+                <groupId>ru.yandex.practicum</groupId>
+                <artifactId>interaction-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- Конфигурация сборки для всех дочерних модулей -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Наследуем конфигурацию компилятора из корневого POM
+                     без переопределения - используем версию из parent -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                </plugin>
+
+                <!-- Наследуем конфигурацию Spring Boot плагина -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

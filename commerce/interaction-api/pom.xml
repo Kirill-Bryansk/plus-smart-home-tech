@@ -4,6 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Родительский модуль commerce -->
     <parent>
         <groupId>ru.yandex.practicum</groupId>
         <artifactId>commerce</artifactId>
@@ -11,34 +12,57 @@
     </parent>
 
     <artifactId>interaction-api</artifactId>
-    <packaging>jar</packaging>
+    <packaging>jar</packaging>  <!-- Библиотека, не исполняемое приложение -->
 
+    <!-- Зависимости API модуля (минимальные, только для компиляции контрактов) -->
     <dependencies>
+        <!-- Feign для декларативных HTTP клиентов -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-openfeign-core</artifactId>
         </dependency>
 
+        <!-- Spring Web для аннотаций REST -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
         </dependency>
 
+        <!-- Spring Data для общих типов (Pageable и т.д.) -->
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
         </dependency>
 
-        <!-- Validation API -->
+        <!-- Validation API для аннотаций валидации -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
+        <!-- Lombok для DTO (опционально, только при компиляции) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- MapStruct для мапперов, если нужны в API -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <optional>true</optional>  <!-- Не обязателен для потребителей API -->
+        </dependency>
     </dependencies>
+
+    <!-- Сборка библиотеки -->
+    <build>
+        <plugins>
+            <!-- Компилятор с процессорами аннотаций (для Lombok/MapStruct) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -51,24 +51,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # Добавляем сервис db-init как у куратора
+  # Добавляем сервис db-init
   db-init:
     image: postgres:16.1
     container_name: db-init
     depends_on:
       postgres:
         condition: service_healthy
-    entrypoint:
-      - bash
-      - -c
-      - |
-        set -e
-        psql postgresql://postgres:12345@postgres:5432 -v ON_ERROR_STOP=1 <<-EOSQL
-        CREATE DATABASE commerce_shopping_cart;
-        CREATE DATABASE commerce_shopping_store;
-        CREATE DATABASE commerce_warehouse;
-        EOSQL
-    # Этот контейнер завершится после создания баз данных
+    entrypoint: |
+      bash -c "
+        psql postgresql://postgres:12345@postgres:5432 -c 'CREATE DATABASE commerce_shopping_cart' 2>/dev/null || echo 'DB exists'
+        psql postgresql://postgres:12345@postgres:5432 -c 'CREATE DATABASE commerce_shopping_store' 2>/dev/null || echo 'DB exists'
+        psql postgresql://postgres:12345@postgres:5432 -c 'CREATE DATABASE commerce_warehouse' 2>/dev/null || echo 'DB exists'
+        psql postgresql://postgres:12345@postgres:5432 -c 'CREATE DATABASE commerce_order' 2>/dev/null || echo 'DB exists'
+        psql postgresql://postgres:12345@postgres:5432 -c 'CREATE DATABASE commerce_payment' 2>/dev/null || echo 'DB exists'
+        psql postgresql://postgres:12345@postgres:5432 -c 'CREATE DATABASE commerce_delivery' 2>/dev/null || echo 'DB exists'
+      "
     init: true
 
 volumes:
