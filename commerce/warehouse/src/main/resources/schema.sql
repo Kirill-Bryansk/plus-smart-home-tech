@@ -69,3 +69,23 @@ CREATE INDEX IF NOT EXISTS idx_warehouse_product_quantity ON warehouse_schema.wa
 
 -- Индекс для поиска хрупких товаров
 CREATE INDEX IF NOT EXISTS idx_warehouse_product_fragile ON warehouse_schema.warehouse_product(fragile);
+
+-- ============================================
+-- Таблица забронированных товаров для заказа
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS warehouse_schema.order_booking (
+    booking_id UUID PRIMARY KEY,
+    order_id UUID NOT NULL,
+    shopping_cart_id UUID NOT NULL,
+    delivery_id UUID,
+    total_weight DOUBLE PRECISION,
+    total_volume DOUBLE PRECISION,
+    fragile BOOLEAN DEFAULT FALSE
+);
+
+-- Индекс для поиска по заказу
+CREATE INDEX IF NOT EXISTS idx_order_booking_order_id ON warehouse_schema.order_booking(order_id);
+
+-- Индекс для поиска по корзине
+CREATE INDEX IF NOT EXISTS idx_order_booking_cart_id ON warehouse_schema.order_booking(shopping_cart_id);
